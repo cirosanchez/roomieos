@@ -1,0 +1,23 @@
+:root {
+  --bg-page: #ffffff;
+  --bg-sidebar: #f7f7f5;
+  --bg-subtle: #f9f9f8;
+  --bg-hover: #efefed;
+  --bg-selected: #e9effc;
+  --text-primary: #37352f;
+  /* Darker variants of the supplied muted colors for readable small text. */
+  --text-secondary: #686762;
+  --text-tertiary: #73726d;
+  --border: #e9e9e7;
+  --border-strong: #d9d9d6;
+  --control-border: #86857f;
+  --accent: #315d9d;
+  --accent-hover: #264a7d;
+  --focus: #315d9d;
+  --success: #24735b;
+  --success-bg: #eaf5f0;
+  --warning: #9a6017;
+  --warning-bg: #fff3e4;
+  --danger: #b64747;
+  --danger-bg: #fbeaea;
+}
