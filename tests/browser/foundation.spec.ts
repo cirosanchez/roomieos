@@ -1,4 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createSampleHousehold } from "../../src/domain/sample";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((state) => {
+    if (localStorage.getItem("roomieos:v1") === null)
+      localStorage.setItem("roomieos:v1", JSON.stringify(state));
+  }, createSampleHousehold(new Date()));
+});
 
 async function openNavigationIfNeeded(page: Page) {
   const trigger = page.getByRole("button", { name: "Open navigation" });
@@ -28,7 +36,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
   });
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your shared home, organized.",
+    "Maple House",
   );
   await expectNoPageOverflow(page);
   await page.screenshot({
@@ -41,7 +49,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
     ["Expenses", "Expenses", "/expenses/"],
     ["Agreements", "House agreements", "/agreements/"],
     ["Settings", "Settings", "/settings/"],
-    ["Dashboard", "Your shared home, organized.", "/"],
+    ["Dashboard", "Maple House", "/"],
   ]) {
     await openNavigationIfNeeded(page);
     await page
@@ -107,32 +115,23 @@ test("about dialog traps keyboard focus, closes with Escape and restores focus",
   await expect(expectedFocus).toBeFocused();
 });
 
-test("welcome is informative and existing browser data remains untouched", async ({
+test("saved households bypass welcome without replacing their data", async ({
   page,
-}, testInfo) => {
-  const saved = JSON.stringify({
-    sentinel: "Milestone 1 must not initialize or overwrite state",
-  });
-  await page.addInitScript((value) => {
-    localStorage.setItem("roomieos:v1", value);
-  }, saved);
-  await page.goto("/welcome/");
-  await expect(
-    page.getByRole("heading", { name: "Explore a sample household" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Start from scratch" }),
-  ).toBeVisible();
-  await expectNoPageOverflow(page);
-  await page.screenshot({
-    path: testInfo.outputPath("welcome.png"),
-    fullPage: true,
-  });
-  await page.getByRole("link", { name: "Back to workspace" }).click();
+}) => {
+  await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your shared home, organized.",
+    "Maple House",
+  );
+  const saved = await page.evaluate(() => localStorage.getItem("roomieos:v1"));
+  await page.goto("/welcome/");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Maple House",
   );
   await page.reload();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Maple House",
+  );
   expect(await page.evaluate(() => localStorage.getItem("roomieos:v1"))).toBe(
     saved,
   );

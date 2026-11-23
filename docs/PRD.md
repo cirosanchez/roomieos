@@ -1,8 +1,10 @@
 # RoomieOS — Product Requirements Document
 
-**Version:** 1.0 · **Project:** ENTI 407 Creation Project · **Target:** Friday, 27 November 2026  
+**Version:** 1.1 · **Project:** ENTI 407 Creation Project · **Target:** Friday, 27 November 2026  
 **Product type:** Interactive, client-side prototype (not a deployed multi-user service)  
 **Status:** Approved product decisions; implementation-ready
+
+**Amended 23 November 2026:** User-approved expansion to 2–20 active roommates and 40 named, grouped preset avatar icons plus initials. Existing local data stays compatible with schema version 1.
 
 ## 1. Product summary
 
@@ -21,7 +23,7 @@ RoomieOS is a lightweight household workspace for **university students living w
 The MVP succeeds when a first-time visitor can:
 
 1. Open a public URL without signing in, and choose between a realistic sample household and starting with an empty one.
-2. Manage a household of **2–5 active roommates** with names and avatars.
+2. Manage a household of **2–20 active roommates** with names and avatars.
 3. Create, edit, complete, skip, rotate and remove chores; see them in list and Kanban views; inspect completion history.
 4. Record expenses with **multiple payers** and **equal, percentage or fixed-amount splits**; see correct simplified balances; settle or reopen an expense.
 5. Add, edit and remove simple house agreements.
@@ -35,7 +37,7 @@ The MVP succeeds when a first-time visitor can:
 
 ### In scope (must ship)
 - One household per browser; first-run choice between sample data and an empty household.
-- Household name and household currency; **2–5 active roommates**; avatars as preset icon/emoji/initials or optional uploaded photo.
+- Household name and household currency; **2–20 active roommates**; avatars as preset icon/emoji/initials or optional uploaded photo.
 - Roommate perspective switcher (non-authenticated).
 - Dashboard with personal and household summaries; **no activity feed**.
 - Chores CRUD, notes, due dates, assignment, statuses (pending/completed/skipped), list + Kanban, overdue indication, manual next-person rotation, completion history.
@@ -87,7 +89,7 @@ Requirements use `FR-*`. Each acceptance criterion should be manually testable a
 
 **FR-01 — First-run choice**
 - With no valid stored state, the welcome screen offers Sample or Empty; neither silently chooses for the visitor.
-- Sample data is internally consistent; Empty creates an otherwise blank household after entering a name, currency and 2–5 roommates.
+- Sample data is internally consistent; Empty creates an otherwise blank household after entering a name, currency and 2–20 roommates.
 
 **FR-02 — Local persistence**
 - All changes to household, selected profile, chores, expense statuses and agreements survive a refresh in the **same browser**.
@@ -105,8 +107,8 @@ Requirements use `FR-*`. Each acceptance criterion should be manually testable a
 - Household currency can be chosen from **CAD, USD, EUR, GBP**; default CAD. All financial records use **one household currency**. Currency change is allowed only when **no expenses exist** (including settled expenses); show the reason when blocked. No exchange-rate conversion.
 
 **FR-05 — Roster and avatars**
-- Add, edit, remove-from-active-roster (archive), and restore roommates; maintain **2–5 active members**. Name is required, trimmed, 1–40 characters.
-- Show avatar initials or a selectable built-in icon/emoji; optionally allow a small uploaded image that is resized/compressed and saved locally (max stored thumbnail about 128 px; gracefully reject invalid/oversized images). No cloud upload or external image dependency.
+- Add, edit, remove-from-active-roster (archive), and restore roommates; maintain **2–20 active members**. Name is required, trimmed, 1–40 characters.
+- Show avatar initials or one of 40 named preset icons/emojis, grouped by Nature, Animals, Food & drink, Hobbies, and Home & favorites; optionally allow a small uploaded image that is resized/compressed and saved locally (max stored thumbnail about 128 px; gracefully reject invalid/oversized images). No cloud upload or external image dependency.
 - Active roommates are eligible for new chore assignments, payer entries and expense splits. Historical records retain references to archived roommates.
 - Archiving requires at least two other active members to remain. Block archive if the member has a **Pending chore** assigned or appears in an **unsettled expense**; explain that chores must be reassigned and expenses settled first. Completed/skipped chores and settled expenses remain visible with archived names. Archived members can be restored if the active-roster limit permits.
 
@@ -259,7 +261,7 @@ type AppState = {
 
 ## 8. Interface screens
 
-- **Welcome:** Choose sample vs empty. Empty asks household name, currency and 2–5 roommates.
+- **Welcome:** Choose sample vs empty. Empty asks household name, currency and 2–20 roommates.
 - **Dashboard:** Household title, current-profile switcher, personal summary cards, upcoming chores, concise household overview.
 - **Chores:** List/Kanban toggle, filter controls, add/edit modal or sheet, details/history, status buttons, rotation.
 - **Expenses:** Household balances, expense list, add/edit form with payer + participant builders and split-method tabs, settlement confirmation and breakdown.
@@ -297,7 +299,7 @@ If time runs short, preserve: working setup + CRUD persistence, accurate expense
 - [ ] Opening the link in a private window shows first-run choice, with no login.
 - [ ] Sample data and empty setup both initialize correctly and do not overwrite existing saved data.
 - [ ] Refresh preserves household, profile, roster, chores, expenses, settlements, agreements, currency.
-- [ ] Add/rename/avatar/edit/archive/restore roommates; limits 2–5 active enforced.
+- [ ] Add/rename/avatar/edit/archive/restore roommates; limits 2–20 active enforced.
 - [ ] Archiving a member with open obligations is prevented with a useful explanation.
 - [ ] Switch profile; personal dashboard changes without modifying shared data.
 - [ ] Create/read/edit/delete chores; statuses pending/completed/skipped work in list and Kanban.

@@ -20,7 +20,8 @@ Read `PLAN.md` before implementation. Follow its approved milestones and update 
 - **No backend, database service, authentication, user accounts, cloud storage, WebSockets, API keys, third-party AI, analytics or network integrations.**
 - **No fake collaboration.** A profile switcher represents a *local demo perspective*, not a real authenticated roommate.
 - **No actual money transfers.** Expense settlement is a manual whole-expense marker; don't imply an integrated payment system.
-- One household; **2–5 active roommates**. First-run must explicitly offer **sample household** or **empty household setup**.
+- One household; **2–20 active roommates**. First-run must explicitly offer **sample household** or **empty household setup**.
+- Archived roommates do not count toward the active limit. Avatar selectors offer initials and 40 named, grouped local icon presets; see `PLAN.md` for the approved expansion.
 - Essential screens: Dashboard, Chores (List + Kanban), Expenses, Agreements, Settings, and first-run Welcome.
 - Household currency (CAD, USD, EUR, GBP) is chosen by the user; no exchange-rate calculation. Block currency changes while any expenses exist.
 - No activity feed, scheduled/background jobs, push notifications, drag-and-drop dependency, or additional features beyond PRD without approval.

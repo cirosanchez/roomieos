@@ -12,12 +12,14 @@ import {
   Menu,
   Settings,
   ShieldCheck,
-  UsersRound,
   Wallet,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog } from "./ui/dialog";
 import { Wordmark } from "./wordmark";
+import { ProfileSwitcher } from "@/features/household/profile-switcher";
+import { useReadyHousehold } from "@/state/household-provider";
+import { InlineNotice } from "./ui/inline-notice";
 
 const navigation = [
   { href: "/", label: "Dashboard", Icon: LayoutDashboard },
@@ -51,6 +53,7 @@ function Navigation({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { state, error, notice, store } = useReadyHousehold();
   const pathname = usePathname();
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -89,7 +92,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Wordmark />
         </Link>
         <p className="mb-3 px-3 text-xs font-medium text-muted">
-          Your household workspace
+          <span className="block truncate" title={state.household.name}>
+            {state.household.name}
+          </span>
         </p>
         <Navigation />
         <div className="mt-auto space-y-4 px-2 pt-8">
@@ -101,7 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div>
               <p className="font-medium text-ink">Local prototype</p>
               <p className="mt-1 text-xs leading-relaxed">
-                One browser. One shared home.
+                Saved on this browser only.
               </p>
             </div>
           </div>
@@ -134,17 +139,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="hidden min-w-0 items-center gap-2 text-sm text-muted lg:flex">
             <House aria-hidden="true" className="size-4 shrink-0" />
-            <span>Household workspace</span>
+            <span className="max-w-48 truncate" title={state.household.name}>
+              {state.household.name}
+            </span>
             <span aria-hidden="true" className="px-1 text-line-strong">
               /
             </span>
             <span className="truncate text-ink">{currentPage}</span>
           </div>
         </div>
-        <span className="flex shrink-0 items-center gap-2 text-xs text-muted sm:text-sm">
-          <UsersRound aria-hidden="true" className="size-4" />
-          No household yet
-        </span>
+        <ProfileSwitcher />
       </header>
 
       <main
@@ -152,6 +156,23 @@ export function AppShell({ children }: { children: ReactNode }) {
         tabIndex={-1}
         className="mx-auto w-full max-w-[1120px] px-4 py-8 outline-none sm:px-5 sm:py-10 lg:px-10 lg:py-12"
       >
+        {(error || notice) && (
+          <div className="mb-6 flex items-start justify-between gap-2 rounded-[7px] bg-subtle">
+            <div className="min-w-0 flex-1" role={error ? undefined : "status"}>
+              <InlineNotice tone={error ? "error" : "neutral"}>
+                {error ?? notice}
+              </InlineNotice>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Dismiss message"
+              onClick={() => store.dismissFeedback()}
+            >
+              <span aria-hidden="true">×</span>
+            </Button>
+          </div>
+        )}
         {children}
       </main>
 
@@ -189,13 +210,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             shared expenses and house agreements.
           </p>
           <p>
-            This foundation preview includes navigation and the visual shell.
-            Household setup and saving are the next development milestone.
+            Household setup, roommate settings and local saving are available.
+            Chore, expense and agreement editing are coming in later milestones.
           </p>
           <p>
-            The finished prototype will keep data in this browser only.
-            Switching roommates will change the demo perspective; it will not
-            sign anyone in or synchronize devices.
+            Your household stays in this browser only. Switching roommates
+            changes the demo perspective; it does not sign anyone in or
+            synchronize devices.
           </p>
           <p>
             Expense settlement will record that an expense was resolved outside

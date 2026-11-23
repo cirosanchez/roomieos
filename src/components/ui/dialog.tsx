@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "./button";
+import { InlineNotice } from "./inline-notice";
 
 type DialogProps = {
   open: boolean;
@@ -87,10 +88,12 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   destructive = false,
+  error,
 }: Omit<DialogProps, "children" | "variant" | "id"> & {
   onConfirm: () => void;
   confirmLabel: string;
   destructive?: boolean;
+  error?: string;
 }) {
   return (
     <Dialog
@@ -99,6 +102,11 @@ export function ConfirmDialog({
       title={title}
       description={description}
     >
+      {error && (
+        <div className="mb-4">
+          <InlineNotice tone="error">{error}</InlineNotice>
+        </div>
+      )}
       <div className="flex flex-wrap justify-end gap-3">
         <Button variant="secondary" onClick={onClose}>
           Cancel

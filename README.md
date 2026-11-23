@@ -11,7 +11,15 @@ npm ci
 npm run dev
 ```
 
-Open <http://localhost:3000>. The current milestone includes the responsive app shell and informative foundation screens. Household setup, profile switching and local persistence are the next milestone; this version does not initialize or modify household storage.
+Open <http://localhost:3000>. Choose a sample household or create an empty household with a name, currency and 2–20 active roommates. Settings supports household edits, roommate names/avatars, archive/restore, reset demo and start over. The profile switcher changes your local demo perspective.
+
+Household data is validated and saved only in this browser under `roomieos:v1`. Refresh preserves changes; sample data is never silently regenerated. Invalid/unsupported data requires explicit confirmed recovery. Storage errors keep the previous household and form entries. If another tab changes the saved household, reload before editing further.
+
+Chores, expenses and agreements currently show saved records without editing controls. Their CRUD tools, Kanban, expense balances and settlement actions belong to the next milestones. Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
+
+## Current checkpoint
+
+Milestone 2 and its feedback loop are complete as of 23 November 2026. Next is Milestone 3: chore CRUD, immutable completion history, manual rotation, filters and List/Kanban. The final dashboard will add personal balances and a fuller personal/household arrangement during expense/integration work. See [PLAN.md](PLAN.md) for the handoff and actual verification results.
 
 ## Checks
 
@@ -23,7 +31,7 @@ npm run build
 npm run test:browser
 ```
 
-Vitest is configured for future domain/storage tests; it currently permits an empty suite. Browser tests cover navigation, responsive overflow and native-dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
+Vitest checks setup, sample validity, roster/currency guards, saved-payload validation and storage transactions/failures. Browser tests cover setup and persistence, profile switching, roster management, recovery, failed-save retries, reset confirmations, cross-tab conflicts, responsive overflow and native-dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium-browser npm run test:browser
@@ -42,8 +50,8 @@ Keep hydration diagnostics enabled. The route browser test checks both uncaught 
 - `src/app`: static App Router pages and household route-group layout.
 - `src/components`: shared shell and UI primitives.
 - `src/features`: feature views; foundation views will be replaced incrementally.
-- `src/domain`: serializable types and, in later milestones, pure domain utilities.
-- `src/state`: reserved boundary for the household provider and storage adapter.
+- `src/domain`: serializable types, runtime validation, household actions, date helpers and sample generation.
+- `src/state`: household provider, hydration gate and save-before-publish storage store.
 - `src/styles`: design tokens mapped into Tailwind.
 
 `npm run build` exports static files to `out/`, suitable for Vercel. There are no backend API routes, server mutations, remote fonts or service integrations. No deployment is performed by the foundation scripts.

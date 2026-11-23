@@ -1,8 +1,10 @@
 # RoomieOS — Design System & Interface Specification
 
-**Version:** 1.0 · **Design direction:** Calm, editorial workspace inspired by Notion (not a clone)  
+**Version:** 1.1 · **Design direction:** Calm, editorial workspace inspired by Notion (not a clone)  
 **Theme:** Light-first · **Product personality:** Organized, approachable, quietly confident  
 **Implementation:** Next.js + TypeScript + Tailwind CSS; native/accessible UI primitives and Lucide icons; deployed on Vercel
+
+**Amended 23 November 2026:** Support 2–20 active roommates. Avatar selectors offer initials and 40 named emoji presets grouped by Nature, Animals, Food & drink, Hobbies, and Home & favorites, using the same accessible native selector in setup and Settings.
 
 ## 1. Design intent
 
@@ -127,7 +129,7 @@ Prefer a top bar with compact RoomieOS mark, current roommate switcher, and acce
 A centered, focused layout (not an elaborate marketing landing page): wordmark, tagline, single line explaining that this is a local demo, and two distinct option cards:
 
 - **Explore a sample household** — recommended, preloaded realistic data.
-- **Start from scratch** — household name, currency, and 2–5 roommate names with icon selectors.
+- **Start from scratch** — household name, currency, and 2–20 roommate names with icon selectors.
 
 Primary action: `Continue with sample` or `Create my household` as selected. Indicate that data stays in this browser, and that no sign-in is needed. Empty setup should never ask the user to create a backend account.
 

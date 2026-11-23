@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { HouseholdProvider } from "@/state/household-provider";
 
 export const metadata: Metadata = {
   title: { default: "RoomieOS", template: "%s · RoomieOS" },
@@ -13,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-dvh text-base leading-relaxed antialiased">
-        {children}
+        <HouseholdProvider>{children}</HouseholdProvider>
       </body>
     </html>
   );

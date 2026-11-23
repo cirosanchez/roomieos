@@ -1,4 +1,4 @@
-// Serializable facts only. Runtime validation and domain actions arrive in Milestone 2.
+// Serializable household facts. Runtime validation lives in validation.ts.
 export type Currency = "CAD" | "USD" | "EUR" | "GBP";
 export type ChoreStatus = "pending" | "completed" | "skipped";
 export type SplitMethod = "equal" | "percentage" | "fixed";

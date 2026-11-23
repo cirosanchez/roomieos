@@ -22,10 +22,12 @@ export function PageHeader({
             {icon}
           </div>
         )}
-        <h1 className="text-[26px] font-bold leading-tight tracking-tight sm:text-[30px]">
+        <h1 className="text-[26px] font-bold leading-tight tracking-tight [overflow-wrap:anywhere] sm:text-[30px]">
           {title}
         </h1>
-        <p className="mt-2 max-w-xl text-base text-muted">{description}</p>
+        <p className="mt-2 max-w-xl text-base text-muted [overflow-wrap:anywhere]">
+          {description}
+        </p>
       </div>
       {action}
     </header>
