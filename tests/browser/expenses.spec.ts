@@ -669,15 +669,19 @@ test("net position signs, colors and plain-language summaries follow the selecte
     "You are owed CAD 40.00 in total by Avery.",
   );
   await expect(summary).toContainText("Avery owes you CAD 40.00.");
-  await expect(summary).toContainText("Other household balances");
-  await expect(summary).toContainText("Avery owes CAD 20.00 to Sam.");
+  await expect(summary).not.toContainText("Other household balances");
+  await expect(summary).not.toContainText("Sam");
+  await expect(summary.getByRole("listitem")).toHaveCount(1);
   await page.reload();
   await expect(amount).toHaveText("CAD 40.00");
   await selectControl(page.getByLabel("Switch demo perspective"), "taylor");
   await expect(amount).toHaveText("CAD 0.00");
   await expect(amount).toHaveClass(/text-muted/);
   await expect(myNet(page)).toContainText("You have no outstanding balance.");
-  await expect(summary).toContainText("Avery owes CAD 40.00 to Jordan.");
+  await expect(summary).toContainText("All settled up");
+  await expect(summary.getByRole("listitem")).toHaveCount(0);
+  await expect(summary).not.toContainText("Avery");
+  await expect(summary).not.toContainText("Jordan");
   expect((await saved(page))!.expenses).toEqual(state.expenses);
   await noOverflow(page);
 });

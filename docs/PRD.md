@@ -8,6 +8,8 @@
 
 **Amended 24 November 2026:** The user explicitly replaced List + Kanban chores with a board-only view. Remove the view switcher and per-card status dropdowns; show status tags on cards. Further user-approved refinement: remove status/roommate filters and derive the board from the currently selected demo roommate. Retain pointer/touch/keyboard dragging and detail status actions; archived-member chore records remain accessible from their Settings roster entries. This supersedes earlier references to chore List views, filters and card dropdowns below; saved records and persistence remain unchanged.
 
+**Expense summary refinement — 24 November 2026:** Show only suggested transfers involving the selected demo roommate, with a personal zero-balance state. Household-wide integer-cent netting still runs before this display filter; expense records and settlement behavior remain unchanged. This supersedes the earlier household-wide transfer display requirement.
+
 ## 1. Product summary
 
 **Tagline:** Your shared home, organized.

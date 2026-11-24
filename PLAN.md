@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Expense net-position styling and readable balance summaries implemented and verified. No deployment performed.
+**Status:** Selected-roommate-only expense summaries implemented and verified. No deployment performed.
 
-**Current milestone:** Component review — expense balance summary complete.
+**Current milestone:** Component review — selected-roommate expense summary complete.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -371,3 +371,9 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Prioritize selected-roommate transfer sentences (You owe amount to name / name owes you amount); retain unrelated balances in Other household balances. Keep currency explicit, open-only arithmetic and outside-app whole-expense settlement semantics unchanged. No form, ledger, schema or action changes.
 - Verification: 122 unit/storage tests and all 45 Chromium expense/integration checks pass at 375/768/1280px. Lint, typecheck, source/test formatting, diff checks and production static build pass. New browser coverage checks red -CAD 60.00 split into CAD 40.00/CAD 20.00 sentences, green unsigned creditor amounts, neutral zero with unrelated household debts, profile switch/refresh and unchanged expense records. Existing rounding, settlement/reopen, storage-failure, archived-role and large-household regressions pass.
 - Reviewed the desktop summary screenshot; desktop/tablet/phone previews are saved under `/tmp/roomieos-expense-summary-review/`. Manual review: switch among a debtor, creditor and even roommate, then settle/reopen an expense and refresh. Keep household currency explicit. Forms, dashboard card presentation and domain calculations remain unchanged; Chromium only and no deployment performed.
+
+### Selected-roommate-only expense summary — 24 November 2026
+
+- User requested only the selected roommate's transactions after reviewing the expense summary. Remove Other household balances from the balance panel and show only simplified transfers involving selectedMemberId. Use a personal zero-balance empty state even when other roommates have outstanding balances.
+- Keep integer-cent netting across the complete household before filtering suggested transfers; do not filter expense inputs to the calculation. Expense records, currency, settlement and saved state remain unchanged in this summary slice.
+- Verification: 122 unit/storage tests and all 24 Chromium expense checks pass at 375/768/1280px. Lint, typecheck, formatting, diff checks and production static build pass. Checks assert unrelated names/transfers are absent, personally even roommates see no suggested-transfer rows despite other household debts, profile switch/refresh works, and records/calculations/settlement remain unchanged. Manual review: switch among a debtor, creditor and even roommate and inspect the summary. Chromium only; no deployment performed.

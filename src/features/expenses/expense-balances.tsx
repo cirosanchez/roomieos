@@ -22,11 +22,6 @@ export function ExpenseBalances() {
       row.fromId === state.selectedMemberId ||
       row.toId === state.selectedMemberId,
   );
-  const household = transfers.filter(
-    (row) =>
-      row.fromId !== state.selectedMemberId &&
-      row.toId !== state.selectedMemberId,
-  );
   const names = personal.map(
     (row) =>
       state.members.find(
@@ -60,21 +55,11 @@ export function ExpenseBalances() {
                 : undefined
             }
           />
-          {!outgoing && !incoming && (
-            <MemberAvatar
-              name={to.name}
-              icon={to.avatar.kind === "icon" ? to.avatar.value : undefined}
-            />
-          )}
         </div>
         <p className="min-w-0 flex-1 break-words text-sm leading-7">
-          {outgoing
-            ? "You owe "
-            : incoming
-              ? `${from.name} owes you `
-              : `${from.name} owes `}
+          {outgoing ? "You owe " : `${from.name} owes you `}
           <strong
-            className={`font-semibold tabular-nums ${outgoing ? "text-danger" : incoming ? "text-success" : "text-ink"}`}
+            className={`font-semibold tabular-nums ${outgoing ? "text-danger" : "text-success"}`}
           >
             {formatMoney(transfer.amountCents, state.household.currency)}
           </strong>
@@ -116,40 +101,18 @@ export function ExpenseBalances() {
           <Scale aria-hidden="true" className="size-4 text-muted" />
           Who owes whom
         </h2>
-        {transfers.length ? (
-          <>
-            {personal.length > 0 ? (
-              <ul
-                aria-label="Your suggested balances"
-                className="mt-4 divide-y divide-line"
-              >
-                {personal.map(transferRow)}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-muted">
-                You have no outstanding balance in this household.
-              </p>
-            )}
-            {household.length > 0 && (
-              <div
-                className={
-                  personal.length ? "mt-4 border-t border-line pt-4" : "mt-4"
-                }
-              >
-                <h3 className="mb-3 text-xs font-medium text-muted">
-                  Other household balances
-                </h3>
-                <ul className="divide-y divide-line">
-                  {household.map(transferRow)}
-                </ul>
-              </div>
-            )}
-          </>
+        {personal.length ? (
+          <ul
+            aria-label="Your suggested balances"
+            className="mt-4 divide-y divide-line"
+          >
+            {personal.map(transferRow)}
+          </ul>
         ) : (
           <div className="mt-4">
             <p className="text-sm font-medium">All settled up</p>
             <p className="mt-1 text-sm text-muted">
-              No outstanding net balances. Open records may still need to be
+              You have no outstanding balance. Open records may still need to be
               marked settled.
             </p>
           </div>
