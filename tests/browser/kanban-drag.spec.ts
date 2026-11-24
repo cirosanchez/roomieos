@@ -1,3 +1,4 @@
+import { expectChoreStatus } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { selectControl } from "./ui-controls";
 import { createSampleHousehold } from "../../src/domain/sample";
@@ -41,7 +42,7 @@ async function mouseMove(page: Page, column: string) {
   await page.mouse.up();
 }
 
-test("pointer drops persist, write completion history once, and match List", async ({
+test("pointer drops persist, write completion history once, and update status tags", async ({
   page,
 }, testInfo) => {
   const errors: string[] = [];
@@ -68,12 +69,7 @@ test("pointer drops persist, write completion history once, and match List", asy
   expect(
     (await saved(page)).chores.find((c) => c.id === id)?.completionHistory,
   ).toEqual(chore.completionHistory);
-  await page.getByRole("button", { name: "List", exact: true }).click();
-  await expect(
-    page
-      .getByLabel("Change status for Clean the kitchen")
-      .filter({ visible: true }),
-  ).toHaveAttribute("data-value", "pending");
+  await expectChoreStatus(page, "Clean the kitchen", "pending");
   await page.reload();
   await expect(handle(page)).toBeVisible();
   await page.screenshot({

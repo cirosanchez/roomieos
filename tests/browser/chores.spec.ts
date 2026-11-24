@@ -1,3 +1,4 @@
+import { changeChoreStatus, expectChoreStatus } from "./ui-controls";
 import { selectItems } from "./ui-controls";
 import { getDialog, selectControl, expectControlValue } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
@@ -32,7 +33,7 @@ async function noOverflow(page: Page) {
   ).toBe(false);
 }
 
-test("empty chores CRUD, history, rotation and both views persist", async ({
+test("board chores CRUD, history and rotation persist", async ({
   page,
 }, testInfo) => {
   const diagnostics: string[] = [];
@@ -72,11 +73,7 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await expect(details.getByText("No completions yet.")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(titleButton(page, "Clean the oven")).toBeFocused();
-  await page.getByRole("button", { name: "Board", exact: true }).click();
-  await selectControl(
-    page.getByLabel("Change status for Clean the oven"),
-    "completed",
-  );
+  await changeChoreStatus(page, "Clean the oven", "completed");
   await expect(
     page
       .getByRole("region", { name: "Completed chores", exact: true })
@@ -174,17 +171,24 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   expect(diagnostics).toEqual([]);
 });
 
-test("filters, overdue and board status controls agree with list and fit the viewport", async ({
+test("board filters, status tags and detail actions persist and fit the viewport", async ({
   page,
 }, testInfo) => {
   await seed(page);
   await expect(
+    page.getByRole("button", { name: "List", exact: true }),
+  ).toHaveCount(0);
+  await expect(
     page.getByRole("button", { name: "Board", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("region", { name: "Chore board", exact: true })
+      .getByRole("combobox"),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("region", { name: "Chore board", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "List", exact: true }).click();
   await expect(
     page.getByText("Overdue", { exact: true }).filter({ visible: true }),
   ).toHaveCount(1);
@@ -199,10 +203,9 @@ test("filters, overdue and board status controls agree with list and fit the vie
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();
   await page.screenshot({
-    path: testInfo.outputPath("chore-list.png"),
+    path: testInfo.outputPath("chore-board-filtered.png"),
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Board", exact: true }).click();
   const board = page.getByRole("region", { name: "Chore board", exact: true });
   await expect(board.getByRole("heading", { level: 2 })).toHaveCount(3);
   await noOverflow(page);
@@ -222,33 +225,19 @@ test("filters, overdue and board status controls agree with list and fit the vie
       .poll(() => board.evaluate((element) => element.scrollLeft))
       .toBeGreaterThan(0);
   }
-  await selectControl(
-    page.getByLabel("Change status for Clean the kitchen"),
-    "skipped",
-  );
+  await changeChoreStatus(page, "Clean the kitchen", "skipped");
   await expect(
     page
       .getByRole("region", { name: "Skipped chores", exact: true })
       .getByRole("button", { name: "Clean the kitchen", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Overdue", { exact: true })).toHaveCount(0);
-  await page.getByRole("button", { name: "List", exact: true }).click();
-  await expectControlValue(
-    page
-      .getByLabel("Change status for Clean the kitchen")
-      .filter({ visible: true }),
-    "skipped",
-  );
+  await expectChoreStatus(page, "Clean the kitchen", "skipped");
   await page.reload();
   await expect(
     page.getByRole("region", { name: "Chore board", exact: true }),
   ).toBeVisible();
-  await expectControlValue(
-    page
-      .getByLabel("Change status for Clean the kitchen")
-      .filter({ visible: true }),
-    "skipped",
-  );
+  await expectChoreStatus(page, "Clean the kitchen", "skipped");
   await noOverflow(page);
 });
 
@@ -389,9 +378,7 @@ test("failed storage saves retain chore drafts and history until retry succeeds"
   expect((await saved(page)).chores).toHaveLength(before.chores.length);
 });
 
-test("long chore content wraps in List, Board and dialogs", async ({
-  page,
-}) => {
+test("long chore content wraps in Board and dialogs", async ({ page }) => {
   const state = createSampleHousehold(new Date());
   state.chores = [state.chores[0]];
   const title = "C".repeat(100);
@@ -400,9 +387,7 @@ test("long chore content wraps in List, Board and dialogs", async ({
   state.members[0].name = "A".repeat(40);
   state.members[1].name = "J".repeat(40);
   await seed(page, state);
-  await page.getByRole("button", { name: "List", exact: true }).click();
   await noOverflow(page);
-  await page.getByRole("button", { name: "Board", exact: true }).click();
   await noOverflow(page);
   await titleButton(page, title).click();
   const details = getDialog(page, { name: title, exact: true });
@@ -443,12 +428,7 @@ test("a cross-tab change blocks an open chore draft until explicit reload", asyn
   await form.getByLabel("Title", { exact: false }).fill("Unsaved draft");
   const other = await context.newPage();
   await other.goto("/chores/");
-  await selectControl(
-    other
-      .getByLabel("Change status for Clean the kitchen")
-      .filter({ visible: true }),
-    "completed",
-  );
+  await changeChoreStatus(other, "Clean the kitchen", "completed");
   await expect(form.getByText(/Close this dialog and reload/)).toBeVisible();
   await expect(
     form.getByRole("button", { name: "Save chore", exact: true }),
@@ -461,12 +441,7 @@ test("a cross-tab change blocks an open chore draft until explicit reload", asyn
   await page
     .getByRole("button", { name: "Reload saved household", exact: true })
     .click();
-  await expectControlValue(
-    page
-      .getByLabel("Change status for Clean the kitchen")
-      .filter({ visible: true }),
-    "completed",
-  );
+  await expectChoreStatus(page, "Clean the kitchen", "completed");
   expect(
     (await saved(page)).chores.some((chore) => chore.title === "Unsaved draft"),
   ).toBe(false);

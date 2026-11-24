@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
 } from "react";
 import { CalendarDays, GripVertical } from "lucide-react";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Button } from "@/components/ui/button";
 import { choreStatuses, choreStatusLabels, isOverdue } from "@/domain/chores";
 import { displayDate } from "@/domain/dates";
@@ -36,7 +37,6 @@ export function ChoreBoard({
   onMove,
   onOpen,
   memberLabel,
-  statusControl,
 }: {
   chores: Chore[];
   today: string;
@@ -44,7 +44,6 @@ export function ChoreBoard({
   onMove: (chore: Chore, status: ChoreStatus) => CommandResult;
   onOpen: (chore: Chore) => void;
   memberLabel: (chore: Chore) => ReactNode;
-  statusControl: (chore: Chore, suffix: string) => ReactNode;
 }) {
   const board = useRef<HTMLDivElement>(null);
   const pointer = useRef<PointerSession | null>(null);
@@ -371,8 +370,8 @@ export function ChoreBoard({
                       </div>
                       <div className="mt-3 border-t border-line pt-3">
                         {memberLabel(chore)}
-                        <div className="relative mt-2 [&_label]:sr-only">
-                          {statusControl(chore, "board")}
+                        <div className="mt-2">
+                          <StatusPill status={chore.status} />
                         </div>
                       </div>
                     </li>

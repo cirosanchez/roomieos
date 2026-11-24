@@ -1,3 +1,4 @@
+import { changeChoreStatus } from "./ui-controls";
 import { getDialog, expectControlValue, selectControl } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { createSampleHousehold } from "../../src/domain/sample";
@@ -422,10 +423,7 @@ test("empty dashboard calls to action create real chores and agreements and refr
   await expect(
     page.getByRole("region", { name: "Chore board", exact: true }),
   ).toBeVisible();
-  await selectControl(
-    page.getByLabel("Change status for Wash mugs"),
-    "skipped",
-  );
+  await changeChoreStatus(page, "Wash mugs", "skipped");
   await page.goto("/");
   await expect(summaryCard(page, "My pending chores")).toContainText("0");
   await expect(snapshot).toContainText("Skipped chores1");

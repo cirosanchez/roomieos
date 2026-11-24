@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Shared UI refresh and draggable Kanban polish implemented and verified. No deployment performed.
+**Status:** Board-only chores and status tags implemented and verified. No deployment performed.
 
-**Current milestone:** Component review — draggable chore cards complete.
+**Current milestone:** Component review — board-only chores and status tags complete.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -338,3 +338,10 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Broader regression initially passed 119 checks and exposed phone viewport leakage from offscreen screen-reader labels plus an existing agreement-menu focus race. Containing those labels within their card wrapper restores the phone viewport; explicit dialog return-focus targets fix agreement edit cancellation. The closing 61-check run covers both corrections. One earlier regression run was externally terminated; only its confirmed leftover test server was stopped before retrying with four workers.
 - Reviewed desktop and phone card screenshots; previews are saved under `/tmp/roomieos-kanban-review/`. Portal menu events are excluded from card drag initiation, and touch dragging is confined to the handle so ordinary board scrolling remains available. No dependency, domain action, storage key or schema changed.
 - Manual review: drag a card into Completed, inspect its history, drag it back and refresh; try Space/arrows/Enter and Escape on a handle. On a phone, drag from the handle toward the board edge and confirm the page itself stays within the viewport. Within-column reordering remains unchanged. Chromium only; no deployment performed.
+
+### Board-only chores and status tags — 24 November 2026
+
+- User explicitly removed the List view and per-card status dropdowns. This supersedes earlier List + Kanban requirements. Chores now has one draggable board; each card displays the existing colored/icon-labeled StatusPill. Keep status/roommate filters, pointer/touch/keyboard dragging and the detail dialog's status buttons.
+- Removed view state/switcher/list rendering and the board status-control callback. No domain/store/schema changes. Browser checks now exercise detail actions and status tags, and assert that the List switcher and card dropdowns are absent.
+- Verification: 122 unit/storage tests and 61 Chromium chore/drag/integration checks pass at 375/768/1280 px, with two intentional skips for phone-only real touch coverage. Lint, typecheck, formatting, diff checks and the production static build pass. Detail status actions, tags, drag completion history, touch/keyboard moves, failed saves, cross-tab protection, archived assignments, filters and refresh persistence remain covered.
+- Reviewed the desktop status-tag layout; screenshots for desktop/tablet/phone are saved under `/tmp/roomieos-board-only-review/`. Manual review: open Chores and confirm the switcher/card dropdowns are gone, move a card and check its tag, then open details to change status and refresh. Chromium only; no deployment performed.

@@ -20,7 +20,7 @@ Take inspiration from Notion's clarity: a paper-like work surface, restrained ty
 1. **Readability before flair:** Clear text hierarchy; prominent page title; one primary action per screen.
 2. **Friendly but useful:** Natural language and small moments of warmth; no forced jokes.
 3. **Low cognitive load:** Strong defaults, few mandatory fields, visible next steps.
-4. **Consistent views:** A chore looks like the same item in list, Kanban, and dashboard.
+4. **Consistent views:** A chore looks like the same item in Kanban, details, and dashboard.
 5. **Trustworthy financial UI:** Expose exact splits and payer contributions; never hide math behind a mystery number.
 6. **Accessible by default:** Keyboard support, visible focus, contrast, non-color status labels and mobile tap targets.
 
@@ -149,11 +149,11 @@ Keep numbers defensible and labels precise: outstanding expense total is differe
 
 Header: `Chores` / short description / right-aligned `+ New chore` button.
 
-Below: segmented `List | Board` control, status/roommate filters (compact). Persist view choice if easy, but not essential.
+Below: compact status/roommate filters. Chores is board-only, with no List/Board switcher (user-approved 24 November 2026).
 
-**List view:** clean Notion-like table with columns: title, assigned to (avatar + name), due date, status; on narrow screens convert rows to cards. Notes visible in detail panel, not as wide text columns.
+**Card status:** show a non-interactive colored tag with icon/text; no per-card status dropdown. Click a title for detail actions, or use the card drag handle.
 
-**Kanban board:** exactly three columns with compact headers and counts: `Pending`, `Completed`, `Skipped`. Cards show title, assignee avatar, due date, optional one-line notes. Click opens details; status action reachable without drag/drop. Approved UI-review enhancement (24 November 2026): cards can be dragged between columns using a handle or a non-interactive card surface with a mouse; touch uses the handle so the rest of the board remains scrollable. Highlight the destination column, support keyboard pickup/arrows/drop/Escape, and retain functional status selectors. Keep ordering within a column unchanged.
+**Kanban board:** exactly three columns with compact headers and counts: `Pending`, `Completed`, `Skipped`. Cards show title, assignee avatar, due date, optional one-line notes. Click opens details; status action reachable without drag/drop. Approved UI-review enhancement (24 November 2026): cards can be dragged between columns using a handle or a non-interactive card surface with a mouse; touch uses the handle so the rest of the board remains scrollable. Highlight the destination column, support keyboard pickup/arrows/drop/Escape, and retain functional status actions inside the detail dialog. Keep ordering within a column unchanged.
 
 **Create/edit modal or drawer fields:** Title (required), Assignee (active member picker), Due date (native date control), Notes (multiline, optional). Clearly label `Save` and `Cancel`. Form errors are inline.
 
@@ -267,7 +267,7 @@ Examples of exact content to use or adapt:
 - [ ] Desktop sidebar and sensible accessible mobile navigation.
 - [ ] Shared page headers, typography and tokenized colors.
 - [ ] Attractive but restrained sample dashboard, and equally thoughtful empty dashboard.
-- [ ] Chore list and Kanban status views are consistent.
+- [ ] Kanban status tags, drag moves and detail status actions are consistent.
 - [ ] Expense amounts and breakdowns are easy to understand.
 - [ ] Every form has labels, validation and clear save/cancel controls.
 - [ ] Roommate avatars work with initials/icons and optional local thumbnails.

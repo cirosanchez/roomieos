@@ -6,6 +6,8 @@
 
 **Amended 23 November 2026:** User-approved expansion to 2–20 active roommates and 40 named, grouped preset avatar icons plus initials. Existing local data stays compatible with schema version 1.
 
+**Amended 24 November 2026:** The user explicitly replaced List + Kanban chores with a board-only view. Remove the view switcher and per-card status dropdowns; show status tags on cards. Retain status/roommate filters, pointer/touch/keyboard dragging and status actions in the detail dialog. This supersedes earlier references to chore List views and card dropdowns below; household behavior and persistence remain unchanged.
+
 ## 1. Product summary
 
 **Tagline:** Your shared home, organized.
