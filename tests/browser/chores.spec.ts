@@ -460,21 +460,25 @@ test("a cross-tab change blocks an open chore draft until explicit reload", asyn
   await other.close();
 });
 
-test("overdue updates after a local date change on window focus", async ({
-  page,
-}) => {
-  const time = new Date(
-    await page.evaluate(() => new Date(2026, 10, 23, 23, 59).toISOString()),
-  );
-  await page.clock.install({ time });
-  // Seed the same calendar day in the runner's zone; the simulated clock uses the browser's zone.
-  await seed(page, createSampleHousehold(new Date(2026, 10, 23, 12)));
-  await expect(
-    page.getByText("Overdue", { exact: true }).filter({ visible: true }),
-  ).toHaveCount(1);
-  await page.clock.setSystemTime(new Date(time.getTime() + 2 * 60_000));
-  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
-  await expect(
-    page.getByText("Overdue", { exact: true }).filter({ visible: true }),
-  ).toHaveCount(2);
+test.describe("local calendar", () => {
+  test.use({ timezoneId: "America/Edmonton" });
+
+  test("overdue updates after a local date change on window focus", async ({
+    page,
+  }) => {
+    const time = new Date(
+      await page.evaluate(() => new Date(2026, 10, 23, 23, 59).toISOString()),
+    );
+    await page.clock.install({ time });
+    // Seed the same calendar day in the runner's zone; the simulated clock uses the browser's zone.
+    await seed(page, createSampleHousehold(new Date(2026, 10, 23, 12)));
+    await expect(
+      page.getByText("Overdue", { exact: true }).filter({ visible: true }),
+    ).toHaveCount(1);
+    await page.clock.setSystemTime(new Date(time.getTime() + 2 * 60_000));
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+    await expect(
+      page.getByText("Overdue", { exact: true }).filter({ visible: true }),
+    ).toHaveCount(2);
+  });
 });

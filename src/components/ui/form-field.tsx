@@ -21,7 +21,7 @@ export function FormField({
       .join(" ") || undefined;
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="block break-words text-sm font-medium">
         {label}
         {props.required && <span className="text-muted"> (required)</span>}
       </label>

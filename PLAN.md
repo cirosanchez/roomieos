@@ -1,12 +1,12 @@
 # RoomieOS implementation plan
 
-**Last updated:** 23 November 2026
+**Last updated:** 24 November 2026
 
-**Status:** Milestone 3 implementation and verification complete. No deployment performed.
+**Status:** Milestone 4 implementation and verification complete. No deployment performed.
 
-**Current milestone:** Milestone 3 — chores complete.
+**Current milestone:** Milestone 4 — expenses complete.
 
-**Next milestone:** Milestone 4 — expense arithmetic, CRUD, balances and settlement.
+**Next milestone:** Milestone 5 — agreements and dashboard integration.
 
 **Delivery target:** Thursday, 26 November 2026; Friday, 27 November is the submission/fix buffer.
 
@@ -14,7 +14,7 @@
 
 Build a polished Next.js client-side prototype for ENTI 407. `docs/PRD.md` is authoritative for behavior; `docs/DESIGN.md` is authoritative for UI/UX. This document records approved architecture, sequencing and actual progress. It does not override those requirements.
 
-At plan approval, the repository contained documentation and a README, with no application scaffold. The foundation, household setup/persistence and chores are now implemented; see the progress record below. Update this record after each working slice: check only completed work, record actual verification, and keep the current/next milestone accurate. Surface conflicts or new scope for user review rather than inventing requirements.
+At plan approval, the repository contained documentation and a README, with no application scaffold. The foundation, household setup/persistence, chores and expenses are now implemented; see the progress record below for verification. Update this record after each working slice: check only completed work, record actual verification, and keep the current/next milestone accurate. Surface conflicts or new scope for user review rather than inventing requirements.
 
 ### Resolved requirements and defaults
 
@@ -80,7 +80,7 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 | [x] | 1. Foundation | Scaffold, design tokens, responsive shell, shared controls/dialogs, test scripts; build passes | Completed Monday |
 | [x] | 2. Setup and persistence | Sample/empty setup, roster, profile switching, household settings, storage validation/recovery, reset/start over; refresh preserves edits | Completed Monday |
 | [x] | 3. Chores | CRUD, status/history, rotation/date confirmation, filters, List/Kanban, overdue; both views use identical state | Completed Monday |
-| [ ] | 4. Expenses | Money utilities/tests first; then CRUD, multiple payers, three split modes, breakdowns, balances and settle/reopen | Wednesday |
+| [x] | 4. Expenses | Money utilities/tests first; then CRUD, multiple payers, three split modes, breakdowns, balances and settle/reopen | Completed Tuesday |
 | [ ] | 5. Integration | Agreements CRUD, derived dashboard, complete sample data, consistent empty/error states and feedback | Wednesday |
 | [ ] | 6. Release | Accessibility/mobile checks, production build, Vercel verification, video and real prompt transcript | Thursday |
 
@@ -116,6 +116,16 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 - [x] Preserve archived historical assignments during edits; require active reassignment or rotation before reopening.
 - [x] Verify local-calendar overdue/focus updates, contained keyboard-accessible Board scrolling, persistence, storage errors, cross-tab draft conflicts, long content and dialog focus at 375/768/1280 px.
 - [x] Run domain/storage and browser regressions, lint, typecheck, formatting and the production static build; record actual results below.
+
+### Milestone 4 TODOs
+
+- [x] Implement and test integer-cent parsing/formatting, deterministic equal and largest-remainder percentage allocations, zero-sum open-expense nets and greedy advisory transfers.
+- [x] Validate payer contributions and participant shares independently; reject duplicate roles, invalid amounts/dates/percentages and unsafe aggregate calculations without saving.
+- [x] Add expense create/edit forms with multiple payers, active participant selection, all three split modes, exact share previews and actionable currency discrepancies.
+- [x] Add responsive expense records/details, full contribution/share breakdowns, personal balance and household transfer suggestions.
+- [x] Add confirmed whole-expense settlement, reopening, confirmed deletion, historical archived-role edits and restoration guards.
+- [x] Derive the dashboard personal balance from the same ledger; preserve browser persistence, conflict protection and failed-save drafts.
+- [x] Complete final full regression and record results/checkpoint after the test-clock correction.
 
 ## 5. Dependencies, tests and risks
 
@@ -252,6 +262,26 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Switch demo perspective, complete a chore, reopen/recomplete it and inspect the newest-first history. Rotate it, checking the proposed roommate/date before confirming; refresh and verify previous completions remain.
 - Try status/roommate filters and both List/Board. On a phone, scroll across all three Board columns, change a status and open details. Compare an overdue pending chore with one due today.
 - Cancel deletion before confirming another deletion. Use Tab/Escape through forms/rotation/confirmations and check focus returns to the triggering control (or New chore after deletion). Browser-only storage and the demo-perspective disclosure should remain clear.
+
+### Expense implementation — 23–24 November 2026
+
+- Added pure integer-cent parsing/formatting, equal and largest-remainder percentage allocation, open-expense netting and deterministic largest-balance advisory transfers. BigInt intermediates protect cent arithmetic; persisted money remains safe integer numbers. Exact display formatting retains the final cent even at the safe integer maximum. Runtime validation and form previews share the same split functions; unsafe aggregate balances are rejected before publication/persistence.
+- Added expense CRUD, category/date/notes fields, multiple payer rows, participant chips and equal/percentage/fixed modes with exact per-person previews. Payer and share totals validate independently, including currency discrepancies and duplicate-role guards. Single-payer totals follow amount edits only while the contribution still matches the prior total; custom/multi-payer contributions must be rebalanced explicitly.
+- Added desktop tables and tablet/phone cards, contribution/share details, personal net position and Who owes whom. Whole-expense settlement requires explicit confirmation of resolution outside RoomieOS; reopening restores the record's balance effect. No pairwise/partial settlement or payment integration is implied. Delete requires confirmation.
+- Historical archived roles remain visible/editable while settled. New selections require active roommates; reopening an expense involving archived roommates requires their restoration. Currency remains locked by settled records. Failed saves retain facts, balances and form drafts; real same-browser cross-tab changes disable stale form saves until explicit reload.
+- Bound the dashboard's My balance card to the same derived ledger, alongside My pending chores and Open household expenses. Broader dashboard composition and agreement editing remain in Milestone 5. Updated README/prototype disclosures and reused existing dialogs/controls, adding a wider expense form and long-label wrapping without a new dependency or storage migration.
+- Verification: `npm test` passes 106 unit/storage tests (41 new). Coverage includes integer parsing/formatting, cent ties/remainders, sizes 2–20, multiple payers, percentage/fixed validation, zero shares, zero-sum nets, deterministic transfers, settlement/reopen, archived roles, aggregate bounds, persistence and failed/stale writes. Lint, typecheck, source/test/config formatting and diff checks pass. The production static build passes and exports routes to `out/`.
+- Verification: full Chromium browser regression passes 83 tests with 1 intentional desktop navigation-drawer skip at 375/768/1280 px. Twenty-one new expense checks cover empty CRUD, exact previews, all splits/multiple payers, independent invalid totals, profile/dashboard balances, settlement cancel/confirm/reopen, persisted refreshes, currency locking, deletion/focus, archived edits/restoration, 20 participants/large safe amounts/long content, create/edit/settle/reopen/delete save retries and cross-tab draft protection. Expense and route checks report no console/uncaught/hydration errors. Reviewed desktop/phone forms, balances and large-household screenshots.
+- Test issues resolved: currency text matchers now normalize Intl whitespace; diagnostics confirmed differing Node/Chromium Edmonton offsets (UTC−7 vs UTC−6). General fixtures and Chromium use UTC, while the existing local-midnight test explicitly exercises Edmonton. One interrupted full run left its isolated port-3100 server; inspected and stopped only that run's server before retrying. Product dates continue to use the visitor's browser-local calendar, and the visitor preview was not stopped.
+- Limits: Chromium verification only; agreements remain read-only until Milestone 5. No deployment performed. Existing `docs/logs/` and development-generated `next-env.d.ts` changes remain outside the milestone commit.
+- Next slice: Milestone 5 — agreements CRUD, final dashboard composition and integration feedback.
+
+### Manual review after Milestone 4
+
+- From an empty household, add a CAD 1.00 expense shared equally by three roommates. Check the 0.34/0.33/0.33 preview, save, switch perspective and refresh; confirm the balances and records persist.
+- Try multiple payers, percentage shares totalling 100.00%, and fixed shares totalling the expense amount. Change the amount or participant selection and confirm mismatches prevent saving with a visible currency discrepancy.
+- Open a breakdown, cancel settlement, then confirm full settlement outside RoomieOS. Check balances/dashboard, refresh and reopen to restore the original nets. Currency should stay locked while settled records exist. Cancel deletion before trying a confirmed deletion.
+- On a phone, scroll through the expense form and use all payer/split controls. Try keyboard Tab/Escape through details, forms and confirmations. With two tabs open, change one and confirm an open draft in the other requires explicit reload before saving.
 
 ### Release deliverables
 

@@ -15,11 +15,15 @@ Open <http://localhost:3000>. Choose a sample household or create an empty house
 
 Household data is validated and saved only in this browser under `roomieos:v1`. Refresh preserves changes; sample data is never silently regenerated. Invalid/unsupported data requires explicit confirmed recovery. Storage errors keep the previous household and form entries. If another tab changes the saved household, reload before editing further.
 
-Chores support create/edit/delete, List and Board views, roommate/status filters, completion history and manual rotation with a confirmed due date. Click a chore title for details and actions. Completing a chore records the current demo perspective; reopening and rotating preserve its history. Expenses and agreements currently show saved records without editing controls; expense balances and settlement belong to later milestones. Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
+Chores support create/edit/delete, List and Board views (Board opens by default), roommate/status filters, completion history and manual rotation with a confirmed due date. Click a chore title for details and actions. Completing a chore records the current demo perspective; reopening and rotating preserve its history.
+
+Expenses support create/edit/delete, multiple payers, equal/percentage/fixed participant splits, exact share previews, personal balances and household transfer suggestions. Click an expense for its contribution/share breakdown and actions. Marking an expense settled confirms that the whole expense was resolved outside RoomieOS; it removes the record's effect on balances and can be undone with Reopen. The app does not transfer money. Settled records remain editable, and currency stays locked until all expense records are removed. Archived historical roles remain visible; restore those roommates before reopening an expense that involves them.
+
+Agreement editing remains for the integration milestone. Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
 
 ## Current checkpoint
 
-Milestone 3 implements chores as of 23 November 2026. Next is Milestone 4: expense arithmetic, CRUD, multiple payers, equal/percentage/fixed splits, balances and settle/reopen. The final dashboard will add personal balances and a fuller personal/household arrangement during expense/integration work. See [PLAN.md](PLAN.md) for progress and actual verification results.
+Milestone 4 implements expenses and the dashboard's personal balance as of 24 November 2026. Next is Milestone 5: agreements CRUD, final dashboard composition and integration feedback. See [PLAN.md](PLAN.md) for progress and actual verification results.
 
 ## Checks
 
@@ -31,13 +35,13 @@ npm run build
 npm run test:browser
 ```
 
-Vitest checks chore CRUD, completion identity/history, rotation, archived members, local-calendar dates, setup, sample validity, roster/currency guards, saved-payload validation and storage transactions/failures. Browser tests cover chore CRUD/List/Board/filters/history, rotation confirmations, overdue date changes, long content, setup and persistence, profile switching, roster management, recovery, failed-save retries, reset confirmations, cross-tab conflicts, responsive overflow and native-dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
+Vitest checks exact cent parsing/formatting and allocation, multiple payers, all split methods, zero-sum nets and deterministic transfers, expense CRUD/settlement/reopening, chore history/rotation, archived members, local dates, setup, roster/currency guards, payload validation and storage transactions/failures. Browser tests exercise expense and chore workflows, previews/balances, setup/persistence, profile switching, roster management, recovery, failed-save retries, confirmations, cross-tab conflicts, large households/long content, responsive overflow and dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium-browser npm run test:browser
 ```
 
-The browser suite starts its own local dev server on port 3100 with an isolated `.next-e2e/` build directory, leaving a running preview on port 3000 alone. Override the test port with `ROOMIEOS_TEST_PORT` if necessary. Screenshots and failure traces are saved under the ignored `test-results/` directory.
+The browser suite starts its own local dev server on port 3100 with an isolated `.next-e2e/` build directory, leaving a running preview on port 3000 alone. General browser checks use UTC in both the runner and Chromium to avoid differences in their daylight-saving databases; a separate Edmonton-time check covers local-midnight overdue updates. Override the test port with `ROOMIEOS_TEST_PORT` if necessary. Screenshots and failure traces are saved under the ignored `test-results/` directory.
 
 ## Hydration troubleshooting
 
@@ -50,7 +54,7 @@ Keep hydration diagnostics enabled. The route browser test checks both uncaught 
 - `src/app`: static App Router pages and household route-group layout.
 - `src/components`: shared shell and UI primitives.
 - `src/features`: feature views; foundation views will be replaced incrementally.
-- `src/domain`: serializable types, runtime validation, household actions, date helpers and sample generation.
+- `src/domain`: serializable types, runtime validation, household/chore/expense actions, integer money allocation/netting, date helpers and sample generation.
 - `src/state`: household provider, hydration gate and save-before-publish storage store.
 - `src/styles`: design tokens mapped into Tailwind.
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { isCalendarDate } from "./dates";
 import type { AppState } from "./types";
+import { calculateBalances, splitEqual, splitPercentage } from "./money";
 import {
   avatarIcons,
   MAX_ACTIVE_MEMBERS,
@@ -29,6 +30,24 @@ export const choreDraftSchema = z.strictObject({
   notes: z.string().max(1000),
   assigneeId: id,
   dueDate: calendarDate,
+});
+
+export const expenseDraftSchema = z.strictObject({
+  description: text(100),
+  amountCents: cents.positive(),
+  date: calendarDate,
+  category: text(50),
+  notes: z.string().max(1000),
+  payers: z
+    .array(z.strictObject({ memberId: id, amountCents: cents.positive() }))
+    .min(1),
+  participants: z
+    .array(z.strictObject({ memberId: id, amountCents: cents }))
+    .min(1),
+  splitMethod: z.enum(["equal", "percentage", "fixed"]),
+  percentageBasisPoints: z
+    .record(id, z.number().int().min(0).max(10000))
+    .optional(),
 });
 
 export const avatarSchema = z.discriminatedUnion("kind", [
@@ -84,25 +103,8 @@ const stateSchema = z
       }),
     ),
     expenses: z.array(
-      z.strictObject({
+      expenseDraftSchema.extend({
         id,
-        description: text(100),
-        amountCents: cents.positive(),
-        date: calendarDate,
-        category: text(50),
-        notes: z.string().max(1000),
-        payers: z
-          .array(
-            z.strictObject({ memberId: id, amountCents: cents.positive() }),
-          )
-          .min(1),
-        participants: z
-          .array(z.strictObject({ memberId: id, amountCents: cents }))
-          .min(1),
-        splitMethod: z.enum(["equal", "percentage", "fixed"]),
-        percentageBasisPoints: z
-          .record(id, z.number().int().min(0).max(10000))
-          .optional(),
         status: z.enum(["open", "settled"]),
         createdAt: timestamp,
       }),
@@ -196,45 +198,30 @@ const stateSchema = z
         issue("Percentages must match the participants and total 100.00%.");
         continue;
       }
-      // BigInt protects validation of large saved amounts from unsafe intermediate products.
-      const divisor = BigInt(
-        expense.splitMethod === "equal" ? participants.length : 10000,
-      );
-      const allocations = participants.map((row, index) => {
-        const product =
-          BigInt(expense.amountCents) *
-          BigInt(expense.splitMethod === "equal" ? 1 : weights![row.memberId]);
-        return {
-          row,
-          index,
-          amount: product / divisor,
-          remainder: product % divisor,
-        };
-      });
-      const remaining = Number(
-        BigInt(expense.amountCents) -
-          allocations.reduce(
-            (total, allocation) => total + allocation.amount,
-            0n,
-          ),
-      );
-      const ranked = [...allocations].sort((a, b) =>
-        a.remainder === b.remainder
-          ? a.index - b.index
-          : a.remainder > b.remainder
-            ? -1
-            : 1,
-      );
-      ranked.slice(0, remaining).forEach((allocation) => {
-        allocation.amount += 1n;
-      });
-      if (
-        allocations.some(
-          (allocation) =>
-            BigInt(allocation.row.amountCents) !== allocation.amount,
+      try {
+        const ids = participants.map((row) => row.memberId);
+        const expected =
+          expense.splitMethod === "equal"
+            ? splitEqual(expense.amountCents, ids)
+            : splitPercentage(expense.amountCents, ids, weights!);
+        if (
+          expected.some(
+            (row, index) => row.amountCents !== participants[index].amountCents,
+          )
         )
-      )
+          issue("Saved shares do not match the chosen split.");
+      } catch {
         issue("Saved shares do not match the chosen split.");
+      }
+    }
+    try {
+      calculateBalances(state.members, state.expenses);
+    } catch (error) {
+      issue(
+        error instanceof Error
+          ? error.message
+          : "Expense balances are invalid.",
+      );
     }
   });
 

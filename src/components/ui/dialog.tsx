@@ -13,6 +13,7 @@ type DialogProps = {
   children: ReactNode;
   variant?: "modal" | "drawer";
   id?: string;
+  size?: "default" | "wide";
 };
 
 export function Dialog({
@@ -23,6 +24,7 @@ export function Dialog({
   children,
   variant = "modal",
   id,
+  size = "default",
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -52,7 +54,7 @@ export function Dialog({
         event.preventDefault();
         onClose();
       }}
-      className={`fixed flex-col overflow-hidden border border-line bg-page p-0 text-ink shadow-xl ${variant === "drawer" ? "inset-y-0 left-0 m-0 h-dvh max-h-dvh w-80 max-w-[calc(100%-2rem)] rounded-r-xl" : "inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg rounded-xl"}`}
+      className={`fixed flex-col overflow-hidden border border-line bg-page p-0 text-ink shadow-xl ${variant === "drawer" ? "inset-y-0 left-0 m-0 h-dvh max-h-dvh w-80 max-w-[calc(100%-2rem)] rounded-r-xl" : `inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] rounded-xl ${size === "wide" ? "max-w-2xl" : "max-w-lg"}`}`}
     >
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-3">
         <h2 id={titleId} className="min-w-0 break-words text-lg font-semibold">

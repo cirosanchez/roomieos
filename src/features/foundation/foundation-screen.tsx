@@ -1,22 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { BookOpen, CheckSquare, House, Wallet } from "lucide-react";
+import { BookOpen, CheckSquare, House } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InlineNotice } from "@/components/ui/inline-notice";
 import { PageHeader } from "@/components/ui/page-header";
-import { StatusPill } from "@/components/ui/status-pill";
 import { useReadyHousehold } from "@/state/household-provider";
-import { activeMembers } from "@/domain/household";
+import { calculateBalances, formatMoney } from "@/domain/money";
 import { displayDate } from "@/domain/dates";
 
 const sections = {
-  expenses: {
-    title: "Expenses",
-    description: "Track shared spending without the spreadsheet.",
-    Icon: Wallet,
-  },
   agreements: {
     title: "House agreements",
     description: "Keep the expectations you share in one place.",
@@ -31,15 +25,7 @@ export function FoundationScreen({
 }) {
   const { state } = useReadyHousehold();
   const { title, description, Icon } = sections[section];
-  const records = section === "expenses" ? state.expenses : state.agreements;
-  const nameFor = (id: string) =>
-    state.members.find((member) => member.id === id)!.name;
-  const money = (cents: number) =>
-    new Intl.NumberFormat("en", {
-      style: "currency",
-      currency: state.household.currency,
-      currencyDisplay: "code",
-    }).format(cents / 100);
+  const records = state.agreements;
   return (
     <>
       <PageHeader
@@ -48,20 +34,13 @@ export function FoundationScreen({
         icon={<Icon className="size-6" />}
       />
       <InlineNotice>
-        Household data is saved locally.{" "}
-        {section === "expenses"
-          ? "Expense editing, balances and settlement controls are coming soon."
-          : "Agreement editing is coming soon."}
+        Household data is saved locally. Agreement editing is coming soon.
       </InlineNotice>
       <div className="mt-6">
         {records.length === 0 ? (
           <EmptyState
             icon={<Icon className="size-6" />}
-            title={
-              section === "expenses"
-                ? "No shared expenses yet"
-                : "Set the ground rules"
-            }
+            title="Set the ground rules"
           >
             <p>
               Your empty household is ready. Editing tools will appear as the
@@ -73,52 +52,6 @@ export function FoundationScreen({
             className="divide-y divide-line rounded-[10px] border border-line"
             aria-label={title}
           >
-            {section === "expenses" &&
-              state.expenses.map((expense) => (
-                <li key={expense.id} className="p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h2 className="break-words text-base font-semibold">
-                        {expense.description}
-                      </h2>
-                      <p className="mt-1 text-sm text-muted">
-                        {expense.category} · {displayDate(expense.date)}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="font-semibold tabular-nums">
-                        {money(expense.amountCents)}
-                      </span>
-                      <StatusPill status={expense.status} />
-                    </div>
-                  </div>
-                  <details className="mt-4 text-sm">
-                    <summary className="w-fit rounded text-accent">
-                      View contributions and shares
-                    </summary>
-                    <div className="mt-3 grid gap-4 rounded-[7px] bg-subtle p-4 sm:grid-cols-2">
-                      <div>
-                        <h3 className="font-semibold">Who paid</h3>
-                        {expense.payers.map((row) => (
-                          <p key={row.memberId} className="mt-1 text-muted">
-                            {nameFor(row.memberId)} · {money(row.amountCents)}
-                          </p>
-                        ))}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">
-                          Who shares · {expense.splitMethod}
-                        </h3>
-                        {expense.participants.map((row) => (
-                          <p key={row.memberId} className="mt-1 text-muted">
-                            {nameFor(row.memberId)} · {money(row.amountCents)}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  </details>
-                </li>
-              ))}
             {section === "agreements" &&
               state.agreements.map((agreement) => (
                 <li key={agreement.id} className="p-5">
@@ -142,6 +75,9 @@ export function FoundationDashboard() {
   const selected = state.members.find(
     (member) => member.id === state.selectedMemberId,
   )!;
+  const net = calculateBalances(state.members, state.expenses).find(
+    (row) => row.memberId === selected.id,
+  )!.netCents;
   const upcoming = state.chores
     .filter(
       (chore) => chore.assigneeId === selected.id && chore.status === "pending",
@@ -158,20 +94,27 @@ export function FoundationDashboard() {
         {[
           { label: "My pending chores", value: upcoming.length },
           {
+            label: "My balance",
+            value: formatMoney(Math.abs(net), state.household.currency),
+            help:
+              net > 0 ? "You are owed" : net < 0 ? "You owe" : "You are even",
+          },
+          {
             label: "Open household expenses",
             value: state.expenses.filter((expense) => expense.status === "open")
               .length,
           },
-          { label: "Active roommates", value: activeMembers(state).length },
-        ].map(({ label, value }) => (
+        ].map(({ label, value, help }) => (
           <section
             key={label}
-            className="rounded-[10px] border border-line p-5"
+            aria-label={label}
+            className="min-w-0 rounded-[10px] border border-line p-5"
           >
             <h2 className="text-sm text-muted">{label}</h2>
-            <p className="mt-3 text-[28px] font-semibold leading-tight tabular-nums">
+            <p className="mt-3 break-words text-[28px] font-semibold leading-tight tabular-nums">
               {value}
             </p>
+            {help && <p className="mt-2 text-sm text-muted">{help}</p>}
           </section>
         ))}
       </div>
@@ -207,8 +150,7 @@ export function FoundationDashboard() {
       </section>
       <div className="mt-8">
         <InlineNotice>
-          Saved on this browser only. Expense balances and agreement editing are
-          still in development.{" "}
+          Saved on this browser only. Agreement editing is still in development.{" "}
           <Link
             href="/settings"
             className="font-medium text-accent underline underline-offset-4"

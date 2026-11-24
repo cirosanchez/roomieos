@@ -1,5 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
+// Give fixtures and Chromium the same calendar, independent of host/browser DST database versions.
+process.env.TZ = "UTC";
+
 const port = Number(process.env.ROOMIEOS_TEST_PORT ?? 3100);
 const baseURL = `http://127.0.0.1:${port}`;
 
@@ -11,6 +14,7 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL,
+    timezoneId: "UTC",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     launchOptions: process.env.CHROMIUM_PATH

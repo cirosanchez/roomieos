@@ -210,9 +210,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             shared expenses and house agreements.
           </p>
           <p>
-            Household setup, roommate settings, chores and local saving are
-            available. Expense and agreement editing are coming in later
-            milestones.
+            Household setup, roommate settings, chores, expenses and local
+            saving are available. Agreement editing is coming in the next
+            milestone.
           </p>
           <p>
             Your household stays in this browser only. Switching roommates
@@ -220,8 +220,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             synchronize devices.
           </p>
           <p>
-            Expense settlement will record that an expense was resolved outside
-            RoomieOS. The app will not move money.
+            Expense settlement records that the whole expense was resolved
+            outside RoomieOS. The app does not move money.
           </p>
         </div>
       </Dialog>

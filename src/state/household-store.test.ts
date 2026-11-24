@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createHouseholdStore, type StoragePort } from "./household-store";
 import { createSampleHousehold } from "../domain/sample";
+import { calculateBalances } from "../domain/money";
+import type { ExpenseAction } from "../domain/expenses";
 
 const now = new Date(2026, 10, 23, 12);
 function harness(initial: string | null = null) {
@@ -50,6 +52,103 @@ function harness(initial: string | null = null) {
 }
 
 describe("browser persistence transaction", () => {
+  it("persists expense settlement/reopen and restores exact balances after initialization", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    const state = h.store.getSnapshot().state!;
+    const before = calculateBalances(state.members, state.expenses);
+    expect(
+      h.store.dispatch(
+        { type: "set-expense-status", id: "groceries", status: "settled" },
+        "Settled",
+      ).ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(h.store.getSnapshot().state!.expenses[0].status).toBe("settled");
+    expect(
+      calculateBalances(state.members, h.store.getSnapshot().state!.expenses),
+    ).not.toEqual(before);
+    expect(
+      h.store.dispatch(
+        { type: "set-expense-status", id: "groceries", status: "open" },
+        "Reopened",
+      ).ok,
+    ).toBe(true);
+    const fresh = createHouseholdStore(() => h.storage);
+    fresh.initialize();
+    expect(
+      calculateBalances(state.members, fresh.getSnapshot().state!.expenses),
+    ).toEqual(before);
+    expect(
+      h.store.dispatch({ type: "delete-expense", id: "groceries" }, "Deleted")
+        .ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(
+      h.store
+        .getSnapshot()
+        .state!.expenses.some((expense) => expense.id === "groceries"),
+    ).toBe(false);
+  });
+  it("keeps expense records and balances unchanged on failed writes or invalid totals", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    const state = h.store.getSnapshot().state!;
+    const raw = h.raw();
+    h.failWrites(true);
+    const actions: ExpenseAction[] = [
+      { type: "delete-expense", id: "groceries" },
+      { type: "set-expense-status", id: "groceries", status: "settled" },
+      {
+        type: "add-expense",
+        expense: {
+          description: "Failed add",
+          amountCents: 100,
+          date: "2026-11-23",
+          category: "Other",
+          notes: "",
+          payers: [{ memberId: "avery", amountCents: 100 }],
+          participants: [{ memberId: "sam", amountCents: 100 }],
+          splitMethod: "equal",
+        },
+      },
+    ];
+    for (const action of actions) {
+      expect(h.store.dispatch(action, "Saved").ok).toBe(false);
+      expect(h.raw()).toBe(raw);
+      expect(h.store.getSnapshot().state).toBe(state);
+      expect(h.store.getSnapshot().notice).toBeNull();
+    }
+    h.failWrites(false);
+    const invalid = { ...actions[2] } as Extract<
+      ExpenseAction,
+      { type: "add-expense" }
+    >;
+    invalid.expense = { ...invalid.expense, amountCents: 101 };
+    expect(h.store.dispatch(invalid, "Saved").ok).toBe(false);
+    expect(h.raw()).toBe(raw);
+    expect(h.store.dispatch(actions[1], "Settled").ok).toBe(true);
+  });
+  it("rejects expense changes from a stale tab even before the storage event is delivered", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    const external = JSON.stringify({
+      ...createSampleHousehold(now),
+      expenses: [],
+    });
+    h.external(external);
+    expect(
+      h.store.dispatch(
+        { type: "set-expense-status", id: "groceries", status: "settled" },
+        "Settled",
+      ).ok,
+    ).toBe(false);
+    expect(h.raw()).toBe(external);
+    expect(h.store.getSnapshot().conflict).toBe(true);
+  });
   it("persists chore completion identity/history, rotation and deletion across reloads", () => {
     const h = harness();
     h.store.initialize();
