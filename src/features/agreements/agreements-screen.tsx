@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useState, useRef } from "react";
 import { BookOpen, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/dialog";
@@ -9,6 +9,13 @@ import { PageHeader } from "@/components/ui/page-header";
 import type { Agreement } from "@/domain/types";
 import { useReadyHousehold } from "@/state/household-provider";
 import { AgreementForm } from "./agreement-form";
+
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/primitives/dropdown-menu";
 
 function AgreementActions({
   agreement,
@@ -21,87 +28,56 @@ function AgreementActions({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const container = useRef<HTMLDivElement>(null);
-  const panelId = useId();
-  const focusTrigger = () =>
-    container.current
-      ?.querySelector<HTMLButtonElement>("[data-agreement-trigger]")
-      ?.focus();
-  useEffect(() => {
-    if (!open) return;
-    const closeOutside = (event: PointerEvent) => {
-      if (
-        event.target instanceof Node &&
-        !container.current?.contains(event.target)
-      )
-        setOpen(false);
-    };
-    document.addEventListener("pointerdown", closeOutside);
-    return () => document.removeEventListener("pointerdown", closeOutside);
-  }, [open]);
-  function choose(callback: () => void) {
-    setOpen(false);
-    focusTrigger();
-    callback();
-  }
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const openingDialog = useRef(false);
   return (
-    <div
-      ref={container}
-      className="relative shrink-0"
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && open) {
-          event.preventDefault();
-          event.stopPropagation();
-          setOpen(false);
-          focusTrigger();
-        }
-      }}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (open) openingDialog.current = false;
       }}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        data-agreement-trigger
-        aria-label={`Actions for ${agreement.title}`}
-        aria-expanded={open}
-        aria-controls={panelId}
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
-        title="Agreement actions"
+      <DropdownMenuTrigger
+        ref={trigger}
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Actions for ${agreement.title}`}
+            disabled={disabled}
+          />
+        }
       >
         <MoreHorizontal aria-hidden="true" className="size-5" />
-      </Button>
-      {open && (
-        <div
-          id={panelId}
-          role="group"
-          aria-label={`Actions for ${agreement.title}`}
-          className="absolute top-full right-0 z-10 mt-1 w-48 rounded-[7px] border border-line bg-page p-1 shadow-sm"
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        finalFocus={() => (openingDialog.current ? false : trigger.current)}
+      >
+        <DropdownMenuItem
+          disabled={disabled}
+          onClick={() => {
+            openingDialog.current = true;
+            trigger.current?.focus();
+            onEdit();
+          }}
         >
-          <Button
-            variant="ghost"
-            className="w-full justify-start"
-            disabled={disabled}
-            onClick={() => choose(onEdit)}
-          >
-            <Pencil aria-hidden="true" className="size-4" />
-            Edit agreement
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full justify-start text-danger"
-            disabled={disabled}
-            onClick={() => choose(onDelete)}
-          >
-            <Trash2 aria-hidden="true" className="size-4" />
-            Delete agreement
-          </Button>
-        </div>
-      )}
-    </div>
+          <Pencil aria-hidden="true" />
+          Edit agreement
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={disabled}
+          variant="destructive"
+          onClick={() => {
+            openingDialog.current = true;
+            trigger.current?.focus();
+            onDelete();
+          }}
+        >
+          <Trash2 aria-hidden="true" />
+          Delete agreement
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

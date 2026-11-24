@@ -1,3 +1,4 @@
+import { getDialog, expectControlValue, selectControl } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { createSampleHousehold } from "../../src/domain/sample";
 import type { AppState } from "../../src/domain/types";
@@ -36,7 +37,7 @@ async function saved(page: Page): Promise<AppState> {
   return page.evaluate(() => JSON.parse(localStorage.getItem("roomieos:v1")!));
 }
 function agreementForm(page: Page, edit = false) {
-  return page.getByRole("dialog", {
+  return getDialog(page, {
     name: edit ? "Edit agreement" : "New agreement",
     exact: true,
   });
@@ -53,10 +54,7 @@ async function action(
   name: "Edit agreement" | "Delete agreement",
 ) {
   await agreementActions(page, title).click();
-  await page
-    .getByRole("group", { name: `Actions for ${title}`, exact: true })
-    .getByRole("button", { name, exact: true })
-    .click();
+  await page.getByRole("menuitem", { name, exact: true }).click();
 }
 async function createAgreement(page: Page, title: string) {
   await page
@@ -117,14 +115,12 @@ test("agreement CRUD validates, persists and restores focus through keyboard men
   const menu = agreementActions(page, "Quiet hours");
   await menu.focus();
   await page.keyboard.press("Enter");
-  await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("button", { name: "Edit agreement", exact: true }),
+    page.getByRole("menuitem", { name: "Edit agreement", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toBeFocused();
   await menu.press("Enter");
-  await page.keyboard.press("Tab");
   await page.keyboard.press("Enter");
   await expect(agreementForm(page, true)).toBeVisible();
   await agreementForm(page, true).getByLabel("Title").fill("Cancelled draft");
@@ -150,7 +146,7 @@ test("agreement CRUD validates, persists and restores focus through keyboard men
   });
   await noOverflow(page);
   await action(page, "Evening quiet hours", "Delete agreement");
-  const confirmation = page.getByRole("dialog", {
+  const confirmation = getDialog(page, {
     name: "Delete agreement?",
     exact: true,
   });
@@ -206,7 +202,8 @@ test("agreement storage failures preserve create/edit drafts and confirmed delet
   await expect(
     agreementForm(page).getByText(/Couldn't save changes/),
   ).toBeVisible();
-  await expect(agreementForm(page).getByLabel("Details")).toHaveValue(
+  await expectControlValue(
+    agreementForm(page).getByLabel("Details"),
     "Wipe the counter.",
   );
   expect((await saved(page)).agreements).toEqual([]);
@@ -233,7 +230,7 @@ test("agreement storage failures preserve create/edit drafts and confirmed delet
     .click();
   await expect(agreementForm(page, true)).not.toBeVisible();
   await action(page, "Kitchen reset", "Delete agreement");
-  const confirmation = page.getByRole("dialog", {
+  const confirmation = getDialog(page, {
     name: "Delete agreement?",
     exact: true,
   });
@@ -274,7 +271,8 @@ test("agreements stay household-wide across perspectives and cross-tab changes b
       exact: true,
     }),
   ).toBeDisabled();
-  await expect(agreementForm(page).getByLabel("Title")).toHaveValue(
+  await expectControlValue(
+    agreementForm(page).getByLabel("Title"),
     "Unsaved local draft",
   );
   await agreementForm(page)
@@ -286,7 +284,7 @@ test("agreements stay household-wide across perspectives and cross-tab changes b
   await expect(
     page.getByRole("heading", { name: "Guest etiquette", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Switch demo perspective").selectOption("sam");
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(
     page.getByRole("heading", { name: "Guest etiquette", exact: true }),
   ).toBeVisible();
@@ -339,7 +337,7 @@ test("dashboard personal chores and household snapshot update through real chore
   await expect(snapshot).toContainText("Completed chores1");
   await expect(snapshot).toContainText("Skipped chores1");
   await expect(page.getByText("Overdue", { exact: true })).toHaveCount(1);
-  await page.getByLabel("Switch demo perspective").selectOption("sam");
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(
     page.getByRole("button", { name: "Clean the bathroom", exact: true }),
   ).toBeVisible();
@@ -350,7 +348,7 @@ test("dashboard personal chores and household snapshot update through real chore
   await page
     .getByRole("button", { name: "Clean the bathroom", exact: true })
     .click();
-  const bathroom = page.getByRole("dialog", {
+  const bathroom = getDialog(page, {
     name: "Clean the bathroom",
     exact: true,
   });
@@ -364,11 +362,11 @@ test("dashboard personal chores and household snapshot update through real chore
   await expect(summaryCard(page, "My pending chores")).toContainText("0");
   await expect(snapshot).toContainText("Pending chores2");
   await expect(snapshot).toContainText("Completed chores2");
-  await page.getByLabel("Switch demo perspective").selectOption("avery");
+  await selectControl(page.getByLabel("Switch demo perspective"), "avery");
   await page
     .getByRole("button", { name: "Clean the kitchen", exact: true })
     .click();
-  const kitchen = page.getByRole("dialog", {
+  const kitchen = getDialog(page, {
     name: "Clean the kitchen",
     exact: true,
   });
@@ -378,7 +376,7 @@ test("dashboard personal chores and household snapshot update through real chore
   await kitchen
     .getByRole("button", { name: "Rotate to next", exact: true })
     .click();
-  const rotation = page.getByRole("dialog", {
+  const rotation = getDialog(page, {
     name: "Rotate chore",
     exact: true,
   });
@@ -414,7 +412,7 @@ test("empty dashboard calls to action create real chores and agreements and refr
     page.getByText("No pending chores assigned", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Add a chore", exact: true }).click();
-  const chore = page.getByRole("dialog", { name: "New chore", exact: true });
+  const chore = getDialog(page, { name: "New chore", exact: true });
   await chore.getByLabel("Title").fill("Wash mugs");
   await chore.getByRole("button", { name: "Save chore", exact: true }).click();
   await expect(chore).not.toBeVisible();
@@ -424,7 +422,10 @@ test("empty dashboard calls to action create real chores and agreements and refr
   await expect(
     page.getByRole("region", { name: "Chore board", exact: true }),
   ).toBeVisible();
-  await page.getByLabel("Change status for Wash mugs").selectOption("skipped");
+  await selectControl(
+    page.getByLabel("Change status for Wash mugs"),
+    "skipped",
+  );
   await page.goto("/");
   await expect(summaryCard(page, "My pending chores")).toContainText("0");
   await expect(snapshot).toContainText("Skipped chores1");

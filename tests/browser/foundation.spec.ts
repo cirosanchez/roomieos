@@ -1,3 +1,4 @@
+import { getDialog } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { createSampleHousehold } from "../../src/domain/sample";
 
@@ -13,7 +14,7 @@ async function openNavigationIfNeeded(page: Page) {
   if (page.viewportSize()!.width < 1024) {
     await trigger.click();
     await expect(
-      page.getByRole("dialog", { name: "Navigation", exact: true }),
+      getDialog(page, { name: "Navigation", exact: true }),
     ).toBeVisible();
   }
 }
@@ -59,7 +60,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
       .click();
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(
-      page.getByRole("dialog", { name: "Navigation", exact: true }),
+      getDialog(page, { name: "Navigation", exact: true }),
     ).not.toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
     await page.reload();
@@ -73,7 +74,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
     .filter({ visible: true })
     .click();
   await expect(
-    page.getByRole("dialog", { name: "About RoomieOS", exact: true }),
+    getDialog(page, { name: "About RoomieOS", exact: true }),
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
@@ -87,7 +88,7 @@ test("about dialog traps keyboard focus, closes with Escape and restores focus",
     .getByRole("button", { name: "About this prototype", exact: true })
     .filter({ visible: true })
     .click();
-  const dialog = page.getByRole("dialog", {
+  const dialog = getDialog(page, {
     name: "About RoomieOS",
     exact: true,
   });
@@ -95,14 +96,7 @@ test("about dialog traps keyboard focus, closes with Escape and restores focus",
   await expect(dialog).toBeVisible();
   await expect(close).toBeFocused();
   await page.keyboard.press("Tab");
-  // Native dialogs may focus the document between cycles, but never an outside control.
-  expect(
-    await page.evaluate(
-      () =>
-        document.activeElement === document.body ||
-        Boolean(document.activeElement?.closest("dialog[open]")),
-    ),
-  ).toBe(true);
+  await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
@@ -147,10 +141,13 @@ test("navigation drawer closes with Escape and returns focus", async ({
   await page.goto("/");
   const trigger = page.getByRole("button", { name: "Open navigation" });
   await trigger.click();
-  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('[aria-label="Open navigation"]')).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("dialog", { name: "Navigation", exact: true }),
+    getDialog(page, { name: "Navigation", exact: true }),
   ).not.toBeVisible();
   await expect(trigger).toBeFocused();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");

@@ -2,9 +2,11 @@
 
 **Version:** 1.1 · **Design direction:** Calm, editorial workspace inspired by Notion (not a clone)  
 **Theme:** Light-first · **Product personality:** Organized, approachable, quietly confident  
-**Implementation:** Next.js + TypeScript + Tailwind CSS; native/accessible UI primitives and Lucide icons; deployed on Vercel
+**Implementation:** Next.js + TypeScript + Tailwind CSS; shadcn/ui with Base UI accessible primitives and Lucide icons; deployed on Vercel
 
-**Amended 23 November 2026:** Support 2–20 active roommates. Avatar selectors offer initials and 40 named emoji presets grouped by Nature, Animals, Food & drink, Hobbies, and Home & favorites, using the same accessible native selector in setup and Settings.
+**Amended 23 November 2026:** Support 2–20 active roommates. Avatar selectors offer initials and 40 named emoji presets grouped by Nature, Animals, Food & drink, Hobbies, and Home & favorites, using the same accessible grouped selector in setup and Settings.
+
+**Amended 24 November 2026:** Approved shared UI refresh uses shadcn/ui with Base UI, preserving the RoomieOS palette and page layouts. Desktop navigation starts expanded and supports an icon rail with tooltips. Mobile navigation uses a Sheet. Custom calendars and page redesigns are deferred to component review.
 
 ## 1. Design intent
 
@@ -80,7 +82,7 @@ Use these as CSS custom properties in `src/styles/tokens.css` (or equivalent Tai
 ### Geometry and spacing
 
 - **Spacing unit:** 4 px. Preferred gaps: 8, 12, 16, 20, 24, 32, 40 px.
-- **Sidebar:** 248 px wide on desktop; subtle right border.
+- **Sidebar:** 248 px expanded on desktop, collapsible to a 64 px icon rail; subtle right border. Collapse state is temporary. Below 1024 px, use a modal slide-over menu.
 - **Top bar:** ~56 px high; breadcrumb/location on left, active roommate switcher on right.
 - **Main max width:** 1120 px with 40 px horizontal interior padding desktop, 20 px tablet, 16 px phone.
 - **Card radius:** 10 px; **controls radius:** 7 px; **modal radius:** 12 px.
@@ -251,7 +253,7 @@ Examples of exact content to use or adapt:
 1. Implement this design using **Tailwind utility classes and a small shared token stylesheet**. Avoid a separate design system package unless truly beneficial.
 2. Start with app shell, page headings, buttons, avatars, text fields and dialogs; reuse them everywhere.
 3. Icons: **lucide-react** is permitted. For local avatar pictures, keep image processing minimal and degrade gracefully to icon/initials.
-4. Prefer accessible native forms/controls; do not reinvent complex components.
+4. Use local shadcn/ui components with Base UI for shared controls, menus, dialogs and navigation. Retain native date inputs for this first refresh; do not reinvent complex interactions.
 5. No need for charts, gradients, externally sourced stock imagery or a dark-mode toggle.
 6. Do not hardcode dashboard figures. Render from real state and shared selector functions.
 7. On expenses, show integer-cent-accurate values. Display breakdowns before the user commits an expense.

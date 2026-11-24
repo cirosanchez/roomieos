@@ -1,10 +1,11 @@
 "use client";
-
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { Button } from "./button";
 import { InlineNotice } from "./inline-notice";
-
+import * as D from "./primitives/dialog";
+import * as A from "./primitives/alert-dialog";
+import * as S from "./primitives/sheet";
 type DialogProps = {
   open: boolean;
   onClose: () => void;
@@ -15,7 +16,6 @@ type DialogProps = {
   id?: string;
   size?: "default" | "wide";
 };
-
 export function Dialog({
   open,
   onClose,
@@ -26,62 +26,85 @@ export function Dialog({
   id,
   size = "default",
 }: DialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  const descriptionId = useId();
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog || !open) return;
-    const trigger =
+  const trigger = useRef<HTMLElement | null>(null);
+  const capture = () => {
+    trigger.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null;
-    dialog.showModal();
-    return () => {
-      dialog.close();
-      if (trigger?.isConnected) trigger.focus();
-    };
-  }, [open]);
-
-  return (
-    <dialog
-      ref={dialogRef}
-      id={id}
-      aria-labelledby={titleId}
-      aria-describedby={description ? descriptionId : undefined}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      className={`fixed flex-col overflow-hidden border border-line bg-page p-0 text-ink shadow-xl ${variant === "drawer" ? "inset-y-0 left-0 m-0 h-dvh max-h-dvh w-80 max-w-[calc(100%-2rem)] rounded-r-xl" : `inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] rounded-xl ${size === "wide" ? "max-w-2xl" : "max-w-lg"}`}`}
-    >
-      <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-3">
-        <h2 id={titleId} className="min-w-0 break-words text-lg font-semibold">
-          {title}
-        </h2>
-        <Button
-          variant="ghost"
-          onClick={onClose}
-          aria-label={`Close ${title}`}
-          title="Close"
-          size="icon"
+    return true;
+  };
+  const restore = () => {
+    if (trigger.current?.isConnected) {
+      trigger.current.focus();
+      return false;
+    }
+    return true;
+  };
+  if (variant === "drawer")
+    return (
+      <S.Sheet
+        open={open}
+        onOpenChange={(v) => {
+          if (!v) onClose();
+        }}
+      >
+        <S.SheetContent
+          id={id}
+          side="left"
+          className="w-80 max-w-[calc(100%-2rem)] overflow-y-auto"
+          initialFocus={capture}
+          finalFocus={restore}
         >
-          <X aria-hidden="true" className="size-5" />
-        </Button>
-      </div>
-      <div className="overflow-y-auto overscroll-contain p-5">
-        {description && (
-          <p id={descriptionId} className="mb-5 break-words text-sm text-muted">
-            {description}
-          </p>
-        )}
-        {children}
-      </div>
-    </dialog>
+          <S.SheetHeader>
+            <S.SheetTitle>{title}</S.SheetTitle>
+            {description && (
+              <S.SheetDescription>{description}</S.SheetDescription>
+            )}
+          </S.SheetHeader>
+          <div className="p-5">{children}</div>
+        </S.SheetContent>
+      </S.Sheet>
+    );
+  return (
+    <D.Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
+      <D.DialogContent
+        id={id}
+        showCloseButton={false}
+        initialFocus={capture}
+        finalFocus={restore}
+        className={`flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 ${size === "wide" ? "sm:max-w-2xl" : "sm:max-w-lg"}`}
+      >
+        <D.DialogHeader className="shrink-0 flex-row items-center justify-between border-b border-line px-5 py-3">
+          <D.DialogTitle className="min-w-0 break-words text-lg font-semibold">
+            {title}
+          </D.DialogTitle>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={`Close ${title}`}
+            onClick={onClose}
+          >
+            <X aria-hidden="true" className="size-5" />
+          </Button>
+        </D.DialogHeader>
+        <div className="overflow-y-auto overscroll-contain p-5">
+          {description && (
+            <D.DialogDescription className="mb-5 break-words">
+              {description}
+            </D.DialogDescription>
+          )}
+          {children}
+        </div>
+      </D.DialogContent>
+    </D.Dialog>
   );
 }
-
 export function ConfirmDialog({
   open,
   onClose,
@@ -97,29 +120,49 @@ export function ConfirmDialog({
   destructive?: boolean;
   error?: string;
 }) {
+  const cancel = useRef<HTMLButtonElement | null>(null);
+  const trigger = useRef<HTMLElement | null>(null);
   return (
-    <Dialog
+    <A.AlertDialog
       open={open}
-      onClose={onClose}
-      title={title}
-      description={description}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
     >
-      {error && (
-        <div className="mb-4">
-          <InlineNotice tone="error">{error}</InlineNotice>
+      <A.AlertDialogContent
+        initialFocus={() => {
+          trigger.current =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null;
+          return cancel.current;
+        }}
+        finalFocus={() => {
+          if (trigger.current?.isConnected) {
+            trigger.current.focus();
+            return false;
+          }
+          return true;
+        }}
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto data-[size=default]:max-w-[calc(100%-2rem)] data-[size=default]:sm:max-w-lg p-5"
+      >
+        <A.AlertDialogHeader className="place-items-start text-left">
+          <A.AlertDialogTitle>{title}</A.AlertDialogTitle>
+          <A.AlertDialogDescription>{description}</A.AlertDialogDescription>
+        </A.AlertDialogHeader>
+        {error && <InlineNotice tone="error">{error}</InlineNotice>}
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button ref={cancel} variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            variant={destructive ? "danger" : "primary"}
+            onClick={onConfirm}
+          >
+            {confirmLabel}
+          </Button>
         </div>
-      )}
-      <div className="flex flex-wrap justify-end gap-3">
-        <Button variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button
-          variant={destructive ? "danger" : "primary"}
-          onClick={onConfirm}
-        >
-          {confirmLabel}
-        </Button>
-      </div>
-    </Dialog>
+      </A.AlertDialogContent>
+    </A.AlertDialog>
   );
 }

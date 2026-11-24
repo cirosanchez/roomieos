@@ -1,3 +1,5 @@
+import { selectItems } from "./ui-controls";
+import { getDialog, expectControlValue, selectControl } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { createSampleHousehold } from "../../src/domain/sample";
 import { localDate } from "../../src/domain/dates";
@@ -35,7 +37,7 @@ function title(page: Page, name: string) {
     .filter({ visible: true });
 }
 function form(page: Page, edit = false) {
-  return page.getByRole("dialog", {
+  return getDialog(page, {
     name: edit ? "Edit expense" : "Add expense",
     exact: true,
   });
@@ -71,7 +73,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
   ).toBeVisible();
   await expect(page.getByText("All settled up", { exact: true })).toBeVisible();
   await add(page, "Shared snacks");
-  await expect(form(page).getByLabel("Contribution 1")).toHaveValue("1.00");
+  await expectControlValue(form(page).getByLabel("Contribution 1"), "1.00");
   const preview = form(page).getByLabel("Share preview", { exact: true });
   await expect(preview).toContainText("CAD 0.34");
   await expect(preview.getByText("CAD 0.33", { exact: true })).toHaveCount(2);
@@ -89,7 +91,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
     page.getByRole("region", { name: "Who owes whom" }),
   ).toContainText("Jordan owes Avery");
   await title(page, "Shared snacks").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Shared snacks",
     exact: true,
   });
@@ -102,7 +104,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
   await details
     .getByRole("button", { name: "Mark as settled", exact: true })
     .click();
-  const confirm = page.getByRole("dialog", {
+  const confirm = getDialog(page, {
     name: "Mark expense as settled?",
     exact: true,
   });
@@ -141,7 +143,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
     .click();
   await page.keyboard.press("Escape");
   await expect(myNet(page)).toContainText("CAD 0.66");
-  await page.getByLabel("Switch demo perspective").selectOption("sam");
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(myNet(page)).toContainText("CAD 0.33");
   await expect(myNet(page)).toContainText("you owe");
   await title(page, "Shared snacks").click();
@@ -150,7 +152,8 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
     .click();
   await form(page, true).getByLabel("Description").fill("Snacks and tea");
   await form(page, true).getByLabel("Total amount").fill("2.00");
-  await expect(form(page, true).getByLabel("Contribution 1")).toHaveValue(
+  await expectControlValue(
+    form(page, true).getByLabel("Contribution 1"),
     "2.00",
   );
   await saveForm(page, true);
@@ -174,14 +177,14 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
   ).toContainText("You owe");
   await page.goto("/expenses/");
   await title(page, "Snacks and tea").click();
-  const updated = page.getByRole("dialog", {
+  const updated = getDialog(page, {
     name: "Snacks and tea",
     exact: true,
   });
   await updated
     .getByRole("button", { name: "Delete expense", exact: true })
     .click();
-  const deletion = page.getByRole("dialog", {
+  const deletion = getDialog(page, {
     name: "Delete expense?",
     exact: true,
   });
@@ -241,7 +244,7 @@ test("multiple payers, percentage rounding and fixed shares revalidate independe
     sam: 3333,
   });
   await title(page, "Split groceries").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Split groceries",
     exact: true,
   });
@@ -267,7 +270,7 @@ test("multiple payers, percentage rounding and fixed shares revalidate independe
   ).toBeVisible();
   expect((await saved(page)).expenses[0]).toEqual(record);
   await form(page, true).getByLabel("Sam's share (CAD)").fill("1.00");
-  await form(page, true).getByLabel("Category").selectOption("Rent");
+  await selectControl(form(page, true).getByLabel("Category"), "Rent");
   await saveForm(page, true);
   await page.keyboard.press("Escape");
   await page.reload();
@@ -322,7 +325,7 @@ test("invalid input shows labeled errors, saves nothing and retains the draft", 
   await expect(
     form(page).getByText("Choose at least one participant."),
   ).toBeVisible();
-  await expect(form(page).getByLabel("Total amount")).toHaveValue("1.001");
+  await expectControlValue(form(page).getByLabel("Total amount"), "1.001");
   expect((await saved(page)).expenses).toEqual([]);
   await form(page).getByLabel("Description").fill("Valid later");
   await form(page).getByLabel("Total amount").fill("1.00");
@@ -356,7 +359,7 @@ test("archived historical roles remain editable and require restoration to reope
   state.selectedMemberId = "jordan";
   await seed(page, state);
   await title(page, "Weekly groceries").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Weekly groceries",
     exact: true,
   });
@@ -371,9 +374,10 @@ test("archived historical roles remain editable and require restoration to reope
   await details
     .getByRole("button", { name: "Edit expense", exact: true })
     .click();
-  await expect(
+  await expectControlValue(
     form(page, true).getByLabel("Payer 1", { exact: true }),
-  ).toHaveValue("avery");
+    "avery",
+  );
   await expect(
     form(page, true).getByLabel("Share with Avery (archived)"),
   ).toBeChecked();
@@ -382,8 +386,9 @@ test("archived historical roles remain editable and require restoration to reope
   await page.keyboard.press("Escape");
   await add(page, "New selection");
   await expect(
-    form(page).getByLabel("Payer 1", { exact: true }).getByRole("option"),
+    await selectItems(form(page).getByLabel("Payer 1", { exact: true })),
   ).toHaveCount(2);
+  await page.keyboard.press("Escape");
   await expect(
     form(page).getByLabel("Share with Avery", { exact: false }),
   ).toHaveCount(0);
@@ -434,14 +439,15 @@ test("failed expense writes retain drafts and balances through create/edit/settl
     .getByRole("button", { name: "Save expense", exact: true })
     .click();
   await expect(form(page).getByText(/Couldn't save changes/)).toBeVisible();
-  await expect(form(page).getByLabel("Description")).toHaveValue(
+  await expectControlValue(
+    form(page).getByLabel("Description"),
     "Keep this draft",
   );
   expect((await saved(page)).expenses).toEqual([]);
   await fail(false);
   await saveForm(page);
   await title(page, "Keep this draft").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Keep this draft",
     exact: true,
   });
@@ -462,7 +468,7 @@ test("failed expense writes retain drafts and balances through create/edit/settl
   await details
     .getByRole("button", { name: "Mark as settled", exact: true })
     .click();
-  const settle = page.getByRole("dialog", {
+  const settle = getDialog(page, {
     name: "Mark expense as settled?",
     exact: true,
   });
@@ -489,7 +495,7 @@ test("failed expense writes retain drafts and balances through create/edit/settl
   await details
     .getByRole("button", { name: "Delete expense", exact: true })
     .click();
-  const deletion = page.getByRole("dialog", {
+  const deletion = getDialog(page, {
     name: "Delete expense?",
     exact: true,
   });
@@ -543,7 +549,7 @@ test("20 participants, long text and large amounts fit forms, details, dashboard
     fullPage: true,
   });
   await title(page, "E".repeat(100)).click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "E".repeat(100),
     exact: true,
   });
@@ -555,7 +561,7 @@ test("20 participants, long text and large amounts fit forms, details, dashboard
   await details
     .getByRole("button", { name: "Mark as settled", exact: true })
     .click();
-  const confirmation = page.getByRole("dialog", {
+  const confirmation = getDialog(page, {
     name: "Mark expense as settled?",
     exact: true,
   });
@@ -575,20 +581,17 @@ test("a settlement in another tab blocks an open expense draft until reload", as
   state.expenses = [state.expenses[0]];
   await seed(page, state);
   await title(page, "Weekly groceries").click();
-  await page
-    .getByRole("dialog", { name: "Weekly groceries", exact: true })
+  await getDialog(page, { name: "Weekly groceries", exact: true })
     .getByRole("button", { name: "Edit expense", exact: true })
     .click();
   await form(page, true).getByLabel("Description").fill("Unsaved edit");
   const other = await context.newPage();
   await other.goto("/expenses/");
   await title(other, "Weekly groceries").click();
-  await other
-    .getByRole("dialog", { name: "Weekly groceries", exact: true })
+  await getDialog(other, { name: "Weekly groceries", exact: true })
     .getByRole("button", { name: "Mark as settled", exact: true })
     .click();
-  await other
-    .getByRole("dialog", { name: "Mark expense as settled?", exact: true })
+  await getDialog(other, { name: "Mark expense as settled?", exact: true })
     .getByRole("button", { name: "Mark as settled", exact: true })
     .click();
   await expect(
@@ -597,7 +600,8 @@ test("a settlement in another tab blocks an open expense draft until reload", as
   await expect(
     form(page, true).getByRole("button", { name: "Save expense", exact: true }),
   ).toBeDisabled();
-  await expect(form(page, true).getByLabel("Description")).toHaveValue(
+  await expectControlValue(
+    form(page, true).getByLabel("Description"),
     "Unsaved edit",
   );
   await form(page, true)

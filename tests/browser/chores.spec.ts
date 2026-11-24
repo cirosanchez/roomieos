@@ -1,3 +1,5 @@
+import { selectItems } from "./ui-controls";
+import { getDialog, selectControl, expectControlValue } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { createSampleHousehold } from "../../src/domain/sample";
 import { localDate, relativeDate } from "../../src/domain/dates";
@@ -43,7 +45,7 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await expect(page.getByText("Nothing on the chore board")).toBeVisible();
   const initial = await saved(page);
   await page.getByRole("button", { name: "Add a chore", exact: true }).click();
-  const form = page.getByRole("dialog", { name: "New chore", exact: true });
+  const form = getDialog(page, { name: "New chore", exact: true });
   await form.getByLabel("Title", { exact: false }).fill("   ");
   await form.getByLabel("Due date").fill("");
   await form.getByRole("button", { name: "Save chore", exact: true }).click();
@@ -53,7 +55,7 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   ).toBeVisible();
   expect(await saved(page)).toEqual(initial);
   await form.getByLabel("Title", { exact: false }).fill("Clean the oven");
-  await form.getByLabel("Assigned to").selectOption("jordan");
+  await selectControl(form.getByLabel("Assigned to"), "jordan");
   await form.getByLabel("Due date").fill(localDate(new Date()));
   await form
     .getByLabel("Notes")
@@ -61,7 +63,7 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await form.getByRole("button", { name: "Save chore", exact: true }).click();
   await expect(form).not.toBeVisible();
   await titleButton(page, "Clean the oven").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Clean the oven",
     exact: true,
   });
@@ -69,15 +71,16 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await page.keyboard.press("Escape");
   await expect(titleButton(page, "Clean the oven")).toBeFocused();
   await page.getByRole("button", { name: "Board", exact: true }).click();
-  await page
-    .getByLabel("Change status for Clean the oven")
-    .selectOption("completed");
+  await selectControl(
+    page.getByLabel("Change status for Clean the oven"),
+    "completed",
+  );
   await expect(
     page
       .getByRole("region", { name: "Completed chores", exact: true })
       .getByRole("button", { name: "Clean the oven" }),
   ).toBeVisible();
-  await page.getByLabel("Switch demo perspective").selectOption("sam");
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await titleButton(page, "Clean the oven").click();
   await details.getByRole("button", { name: "Reopen as pending" }).click();
   await details.getByRole("button", { name: "Mark completed" }).click();
@@ -89,12 +92,13 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await expect(history.nth(1)).toContainText("Avery");
   const beforeRotation = await saved(page);
   await details.getByRole("button", { name: "Rotate to next" }).click();
-  const rotate = page.getByRole("dialog", {
+  const rotate = getDialog(page, {
     name: "Rotate chore",
     exact: true,
   });
   await expect(rotate.getByText("Next roommate:")).toContainText("Sam");
-  await expect(rotate.getByLabel("New due date")).toHaveValue(
+  await expectControlValue(
+    rotate.getByLabel("New due date"),
     suggestedRotationDate(localDate(new Date()), localDate(new Date())),
   );
   await rotate.getByRole("button", { name: "Cancel", exact: true }).click();
@@ -118,10 +122,10 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await details
     .getByRole("button", { name: "Edit chore", exact: true })
     .click();
-  const edit = page.getByRole("dialog", { name: "Edit chore", exact: true });
+  const edit = getDialog(page, { name: "Edit chore", exact: true });
   await edit.getByLabel("Title", { exact: false }).fill("Clean oven and trays");
   await edit.getByRole("button", { name: "Save chore", exact: true }).click();
-  const updated = page.getByRole("dialog", {
+  const updated = getDialog(page, {
     name: "Clean oven and trays",
     exact: true,
   });
@@ -144,7 +148,7 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await updated
     .getByRole("button", { name: "Delete chore", exact: true })
     .click();
-  const confirmation = page.getByRole("dialog", {
+  const confirmation = getDialog(page, {
     name: "Delete chore?",
     exact: true,
   });
@@ -182,12 +186,12 @@ test("filters, overdue and board status controls agree with list and fit the vie
   await expect(
     page.getByText("Overdue", { exact: true }).filter({ visible: true }),
   ).toHaveCount(1);
-  await page.getByLabel("Filter by roommate").selectOption("jordan");
+  await selectControl(page.getByLabel("Filter by roommate"), "jordan");
   await expect(titleButton(page, "Take out recycling")).toBeVisible();
   await expect(
     page.getByText("Overdue", { exact: true }).filter({ visible: true }),
   ).toHaveCount(0);
-  await page.getByLabel("Filter by status").selectOption("completed");
+  await selectControl(page.getByLabel("Filter by status"), "completed");
   await expect(page.getByText("No matching chores")).toBeVisible();
   await page
     .getByRole("button", { name: "Clear filters", exact: true })
@@ -216,9 +220,10 @@ test("filters, overdue and board status controls agree with list and fit the vie
       .poll(() => board.evaluate((element) => element.scrollLeft))
       .toBeGreaterThan(0);
   }
-  await page
-    .getByLabel("Change status for Clean the kitchen")
-    .selectOption("skipped");
+  await selectControl(
+    page.getByLabel("Change status for Clean the kitchen"),
+    "skipped",
+  );
   await expect(
     page
       .getByRole("region", { name: "Skipped chores", exact: true })
@@ -226,20 +231,22 @@ test("filters, overdue and board status controls agree with list and fit the vie
   ).toBeVisible();
   await expect(page.getByText("Overdue", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "List", exact: true }).click();
-  await expect(
+  await expectControlValue(
     page
       .getByLabel("Change status for Clean the kitchen")
       .filter({ visible: true }),
-  ).toHaveValue("skipped");
+    "skipped",
+  );
   await page.reload();
   await expect(
     page.getByRole("region", { name: "Chore board", exact: true }),
   ).toBeVisible();
-  await expect(
+  await expectControlValue(
     page
       .getByLabel("Change status for Clean the kitchen")
       .filter({ visible: true }),
-  ).toHaveValue("skipped");
+    "skipped",
+  );
   await noOverflow(page);
 });
 
@@ -262,7 +269,7 @@ test("historical archived assignments remain editable and rotate through a large
   );
   await seed(page, state);
   await titleButton(page, "Vacuum the living room").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Vacuum the living room",
     exact: true,
   });
@@ -275,13 +282,13 @@ test("historical archived assignments remain editable and rotate through a large
   await details
     .getByRole("button", { name: "Edit chore", exact: true })
     .click();
-  const editor = page.getByRole("dialog", { name: "Edit chore", exact: true });
-  await expect(editor.getByLabel("Assigned to")).toHaveValue("avery");
+  const editor = getDialog(page, { name: "Edit chore", exact: true });
+  await expectControlValue(editor.getByLabel("Assigned to"), "avery");
   await editor.getByLabel("Notes").fill("Keep the historical assignment.");
   await editor.getByRole("button", { name: "Save chore", exact: true }).click();
   expect((await saved(page)).chores[0].assigneeId).toBe("avery");
   await details.getByRole("button", { name: "Rotate to next" }).click();
-  const rotate = page.getByRole("dialog", {
+  const rotate = getDialog(page, {
     name: "Rotate chore",
     exact: true,
   });
@@ -293,13 +300,12 @@ test("historical archived assignments remain editable and rotate through a large
   ).toContainText("Avery (archived)");
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "New chore", exact: true }).click();
-  const form = page.getByRole("dialog", { name: "New chore", exact: true });
-  await expect(form.getByLabel("Assigned to").getByRole("option")).toHaveCount(
+  const form = getDialog(page, { name: "New chore", exact: true });
+  await expect(await selectItems(form.getByLabel("Assigned to"))).toHaveCount(
     20,
   );
-  await expect(
-    form.getByLabel("Assigned to").getByRole("option", { name: /Avery/ }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("option", { name: /Avery/ })).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await form.getByRole("button", { name: "Cancel", exact: true }).click();
   await page.reload();
   expect((await saved(page)).chores[0]).toMatchObject({
@@ -328,11 +334,12 @@ test("failed storage saves retain chore drafts and history until retry succeeds"
   });
   const before = await saved(page);
   await page.getByRole("button", { name: "New chore", exact: true }).click();
-  const form = page.getByRole("dialog", { name: "New chore", exact: true });
+  const form = getDialog(page, { name: "New chore", exact: true });
   await form.getByLabel("Title", { exact: false }).fill("Water the plants");
   await form.getByRole("button", { name: "Save chore", exact: true }).click();
   await expect(form.getByText(/Couldn't save changes/)).toBeVisible();
-  await expect(form.getByLabel("Title", { exact: false })).toHaveValue(
+  await expectControlValue(
+    form.getByLabel("Title", { exact: false }),
     "Water the plants",
   );
   expect(await saved(page)).toEqual(before);
@@ -340,7 +347,7 @@ test("failed storage saves retain chore drafts and history until retry succeeds"
   await form.getByRole("button", { name: "Save chore", exact: true }).click();
   await expect(form).not.toBeVisible();
   await titleButton(page, "Water the plants").click();
-  const details = page.getByRole("dialog", {
+  const details = getDialog(page, {
     name: "Water the plants",
     exact: true,
   });
@@ -363,7 +370,7 @@ test("failed storage saves retain chore drafts and history until retry succeeds"
   await details
     .getByRole("button", { name: "Delete chore", exact: true })
     .click();
-  const confirmation = page.getByRole("dialog", {
+  const confirmation = getDialog(page, {
     name: "Delete chore?",
     exact: true,
   });
@@ -396,14 +403,14 @@ test("long chore content wraps in List, Board and dialogs", async ({
   await page.getByRole("button", { name: "Board", exact: true }).click();
   await noOverflow(page);
   await titleButton(page, title).click();
-  const details = page.getByRole("dialog", { name: title, exact: true });
+  const details = getDialog(page, { name: title, exact: true });
   expect(
     await details.evaluate(
       (element) => element.scrollWidth > element.clientWidth,
     ),
   ).toBe(false);
   await details.getByRole("button", { name: "Rotate to next" }).click();
-  const rotation = page.getByRole("dialog", {
+  const rotation = getDialog(page, {
     name: "Rotate chore",
     exact: true,
   });
@@ -430,30 +437,34 @@ test("a cross-tab change blocks an open chore draft until explicit reload", asyn
 }) => {
   await seed(page);
   await page.getByRole("button", { name: "New chore", exact: true }).click();
-  const form = page.getByRole("dialog", { name: "New chore", exact: true });
+  const form = getDialog(page, { name: "New chore", exact: true });
   await form.getByLabel("Title", { exact: false }).fill("Unsaved draft");
   const other = await context.newPage();
   await other.goto("/chores/");
-  await other
-    .getByLabel("Change status for Clean the kitchen")
-    .filter({ visible: true })
-    .selectOption("completed");
+  await selectControl(
+    other
+      .getByLabel("Change status for Clean the kitchen")
+      .filter({ visible: true }),
+    "completed",
+  );
   await expect(form.getByText(/Close this dialog and reload/)).toBeVisible();
   await expect(
     form.getByRole("button", { name: "Save chore", exact: true }),
   ).toBeDisabled();
-  await expect(form.getByLabel("Title", { exact: false })).toHaveValue(
+  await expectControlValue(
+    form.getByLabel("Title", { exact: false }),
     "Unsaved draft",
   );
   await form.getByRole("button", { name: "Cancel", exact: true }).click();
   await page
     .getByRole("button", { name: "Reload saved household", exact: true })
     .click();
-  await expect(
+  await expectControlValue(
     page
       .getByLabel("Change status for Clean the kitchen")
       .filter({ visible: true }),
-  ).toHaveValue("completed");
+    "completed",
+  );
   expect(
     (await saved(page)).chores.some((chore) => chore.title === "Unsaved draft"),
   ).toBe(false);

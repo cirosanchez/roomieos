@@ -1,3 +1,5 @@
+import { Input } from "./primitives/input";
+import { Label } from "./primitives/label";
 import type { InputHTMLAttributes } from "react";
 
 export const controlStyles =
@@ -21,11 +23,11 @@ export function FormField({
       .join(" ") || undefined;
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="block break-words text-sm font-medium">
+      <Label htmlFor={id} className="block break-words text-sm font-medium">
         {label}
         {props.required && <span className="text-muted"> (required)</span>}
-      </label>
-      <input
+      </Label>
+      <Input
         {...props}
         id={id}
         className={`${controlStyles} ${props.className ?? ""}`}

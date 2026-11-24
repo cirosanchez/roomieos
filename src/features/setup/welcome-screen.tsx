@@ -1,4 +1,8 @@
 "use client";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/primitives/radio-group";
 
 import { useState, type FormEvent } from "react";
 import {
@@ -112,7 +116,16 @@ export function WelcomeScreen() {
           <legend className="mb-4 text-sm font-medium">
             How would you like to begin?
           </legend>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <RadioGroup
+            name="starter-mode"
+            value={mode}
+            onValueChange={(value) => {
+              setMode(value as "sample" | "empty");
+              setErrors({});
+              store.dismissFeedback();
+            }}
+            className="grid gap-4 sm:grid-cols-2"
+          >
             {[
               {
                 value: "sample" as const,
@@ -131,16 +144,8 @@ export function WelcomeScreen() {
                 key={value}
                 className={`flex cursor-pointer items-start gap-3 rounded-[10px] border p-5 ${mode === value ? "border-accent bg-selected" : "border-line hover:bg-subtle"}`}
               >
-                <input
-                  type="radio"
-                  name="starter-mode"
+                <RadioGroupItem
                   value={value}
-                  checked={mode === value}
-                  onChange={() => {
-                    setMode(value);
-                    setErrors({});
-                    store.dismissFeedback();
-                  }}
                   className="mt-1 size-4 shrink-0 accent-accent"
                 />
                 <span>
@@ -153,7 +158,7 @@ export function WelcomeScreen() {
                 </span>
               </label>
             ))}
-          </div>
+          </RadioGroup>
         </fieldset>
         {mode && (
           <div className="space-y-6 border-t border-line pt-6">

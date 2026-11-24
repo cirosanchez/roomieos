@@ -1,11 +1,12 @@
 "use client";
+import { Textarea } from "@/components/ui/primitives/textarea";
 
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { FormField, controlStyles } from "@/components/ui/form-field";
 import { InlineNotice } from "@/components/ui/inline-notice";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectField, selectOptions } from "@/components/ui/select-field";
 import { activeMembers } from "@/domain/household";
 import { localDate } from "@/domain/dates";
 import type { ChoreDraft } from "@/domain/chores";
@@ -108,25 +109,26 @@ export function ChoreForm({
           label="Assigned to (required)"
           required
           value={draft.assigneeId}
-          onChange={(event) => change("assigneeId", event.target.value)}
+          onValueChange={(value) => change("assigneeId", value)}
           error={errors.assigneeId}
           help={
             archivedAssignee
               ? "Keep this historical assignment, or choose an active roommate before reopening."
               : undefined
           }
-        >
-          {archivedAssignee && (
-            <option value={archivedAssignee.id}>
-              {archivedAssignee.name} (archived — current assignment)
-            </option>
+          options={selectOptions(
+            archivedAssignee && {
+              value: archivedAssignee.id,
+              label: (
+                <>{archivedAssignee.name}(archived — current assignment)</>
+              ),
+            },
+            activeMembers(state).map((member) => ({
+              value: member.id,
+              label: <>{member.name}</>,
+            })),
           )}
-          {activeMembers(state).map((member) => (
-            <option key={member.id} value={member.id}>
-              {member.name}
-            </option>
-          ))}
-        </SelectField>
+        />
         <FormField
           id="chore-due-date"
           label="Due date"
@@ -142,7 +144,7 @@ export function ChoreForm({
           <label htmlFor="chore-notes" className="block text-sm font-medium">
             Notes (optional)
           </label>
-          <textarea
+          <Textarea
             id="chore-notes"
             className={`${controlStyles} min-h-28 resize-y`}
             rows={4}

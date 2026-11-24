@@ -1,3 +1,5 @@
+import { selectItems } from "./ui-controls";
+import { selectControl, getDialog, expectControlValue } from "./ui-controls";
 import { expect, test, type Page } from "@playwright/test";
 import { createSampleHousehold } from "../../src/domain/sample";
 import type { AppState } from "../../src/domain/types";
@@ -17,7 +19,7 @@ async function sample(page: Page) {
   await page.goto("/");
   await expect(page).toHaveURL(/\/welcome\/$/);
   await page.getByRole("radio", { name: /Explore a sample household/ }).check();
-  await page.getByLabel("Household currency").selectOption("USD");
+  await selectControl(page.getByLabel("Household currency"), "USD");
   await page.getByRole("button", { name: "Continue with sample" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Maple House",
@@ -27,7 +29,7 @@ async function enterEmpty(page: Page) {
   await page.goto("/welcome/");
   await page.getByRole("radio", { name: /Start from scratch/ }).check();
   await page.getByLabel("Household name").fill("Cedar House");
-  await page.getByLabel("Household currency").selectOption("EUR");
+  await selectControl(page.getByLabel("Household currency"), "EUR");
   await page.getByLabel("Roommate 1 name").fill("Alex");
   await page.getByLabel("Roommate 2 name").fill("Morgan");
 }
@@ -40,7 +42,7 @@ async function createEmpty(page: Page) {
 }
 async function addMember(page: Page, name: string) {
   await page.getByRole("button", { name: "Add roommate", exact: true }).click();
-  const dialog = page.getByRole("dialog", {
+  const dialog = getDialog(page, {
     name: "Add roommate",
     exact: true,
   });
@@ -72,7 +74,7 @@ test("first run is explicit; sample, profile and settings persist without reseed
   expect(original.chores).toHaveLength(5);
   expect(original.expenses).toHaveLength(4);
   expect(original.agreements).toHaveLength(3);
-  await page.getByLabel("Switch demo perspective").selectOption("sam");
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(
     page.getByText("Your household from Sam's perspective."),
   ).toBeVisible();
@@ -88,10 +90,11 @@ test("first run is explicit; sample, profile and settings persist without reseed
   await page.getByRole("button", { name: "Save household" }).click();
   await expect(page.getByRole("status")).toHaveText(/Household saved/);
   await page.reload();
-  await expect(page.getByLabel("Household name")).toHaveValue(
+  await expectControlValue(
+    page.getByLabel("Household name"),
     "Maple House Updated",
   );
-  await expect(page.getByLabel("Switch demo perspective")).toHaveValue("sam");
+  await expectControlValue(page.getByLabel("Switch demo perspective"), "sam");
   const updated = (await saved(page))!;
   expect(updated).toEqual({
     ...original,
@@ -117,7 +120,7 @@ test("empty setup validates fields and creates an empty household with editable 
   ).toBeVisible();
   expect(await saved(page)).toBeNull();
   await page.getByLabel("Household name").fill("  Cedar House  ");
-  await page.getByLabel("Household currency").selectOption("EUR");
+  await selectControl(page.getByLabel("Household currency"), "EUR");
   await page.getByLabel("Roommate 1 name").fill("  Alex  ");
   await page.getByLabel("Roommate 2 name").fill("Morgan");
   await page.screenshot({
@@ -140,10 +143,10 @@ test("empty setup validates fields and creates an empty household with editable 
     [],
   ]);
   await settings(page);
-  await page.getByLabel("Household currency").selectOption("GBP");
+  await selectControl(page.getByLabel("Household currency"), "GBP");
   await page.getByRole("button", { name: "Save household" }).click();
   await page.reload();
-  await expect(page.getByLabel("Household currency")).toHaveValue("GBP");
+  await expectControlValue(page.getByLabel("Household currency"), "GBP");
   expect((await saved(page))!.household.currency).toBe("GBP");
   const longName = "W".repeat(60);
   await page.getByLabel("Household name").fill(longName);
@@ -168,11 +171,11 @@ test("roster editing, limits, archive fallback and restore retain stable identit
   await addMember(page, "Taylor");
   const original = (await saved(page))!;
   const taylor = original.members.find((member) => member.name === "Taylor")!;
-  await page.getByLabel("Switch demo perspective").selectOption(taylor.id);
+  await selectControl(page.getByLabel("Switch demo perspective"), taylor.id);
   await page
     .getByRole("button", { name: "Archive Taylor", exact: true })
     .click();
-  let dialog = page.getByRole("dialog", {
+  let dialog = getDialog(page, {
     name: "Archive Taylor?",
     exact: true,
   });
@@ -184,12 +187,13 @@ test("roster editing, limits, archive fallback and restore retain stable identit
   await page
     .getByRole("button", { name: "Archive Taylor", exact: true })
     .click();
-  dialog = page.getByRole("dialog", { name: "Archive Taylor?", exact: true });
+  dialog = getDialog(page, { name: "Archive Taylor?", exact: true });
   await dialog
     .getByRole("button", { name: "Archive roommate", exact: true })
     .click();
   await expect(dialog).not.toBeVisible();
-  await expect(page.getByLabel("Switch demo perspective")).toHaveValue(
+  await expectControlValue(
+    page.getByLabel("Switch demo perspective"),
     original.members[0].id,
   );
   await page.reload();
@@ -202,12 +206,12 @@ test("roster editing, limits, archive fallback and restore retain stable identit
     .getByRole("button", { name: "Restore Taylor", exact: true })
     .click();
   await page.getByRole("button", { name: "Edit Taylor", exact: true }).click();
-  const editor = page.getByRole("dialog", {
+  const editor = getDialog(page, {
     name: "Edit roommate",
     exact: true,
   });
   await editor.getByLabel("Roommate name").fill("Taylor Lee");
-  await editor.getByLabel("Avatar", { exact: true }).selectOption("☀️");
+  await selectControl(editor.getByLabel("Avatar", { exact: true }), "☀️");
   await editor.getByRole("button", { name: "Save roommate" }).click();
   await expect(editor).not.toBeVisible();
   await addMember(page, "Riley");
@@ -255,12 +259,15 @@ test("20-roommate setup, new avatars and restore limits persist on mobile and de
       .getByLabel(`Roommate ${index} name`, { exact: false })
       .fill(`Roommate ${index}`);
   await expect(
-    page.getByLabel("Roommate 1 avatar").locator("option"),
+    await selectItems(page.getByLabel("Roommate 1 avatar")),
   ).toHaveCount(41);
-  await page.getByLabel("Roommate 1 avatar").selectOption({ label: "🦊 Fox" });
-  await page
-    .getByLabel("Roommate 20 avatar")
-    .selectOption({ label: "📚 Books" });
+  await page.keyboard.press("Escape");
+  await selectControl(page.getByLabel("Roommate 1 avatar"), {
+    label: "🦊 Fox",
+  });
+  await selectControl(page.getByLabel("Roommate 20 avatar"), {
+    label: "📚 Books",
+  });
   await page.getByRole("button", { name: "Create my household" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Campus House",
@@ -270,11 +277,13 @@ test("20-roommate setup, new avatars and restore limits persist on mobile and de
   expect(original.members[0].avatar).toEqual({ kind: "icon", value: "🦊" });
   expect(original.members[19].avatar).toEqual({ kind: "icon", value: "📚" });
   await expect(
-    page.getByLabel("Switch demo perspective").locator("option"),
+    await selectItems(page.getByLabel("Switch demo perspective")),
   ).toHaveCount(20);
-  await page
-    .getByLabel("Switch demo perspective")
-    .selectOption(original.members[19].id);
+  await page.keyboard.press("Escape");
+  await selectControl(
+    page.getByLabel("Switch demo perspective"),
+    original.members[19].id,
+  );
   await settings(page);
   await expect(
     page.getByRole("button", { name: "Add roommate", exact: true }),
@@ -282,22 +291,22 @@ test("20-roommate setup, new avatars and restore limits persist on mobile and de
   await page
     .getByRole("button", { name: "Edit Roommate 2", exact: true })
     .click();
-  const editor = page.getByRole("dialog", {
+  const editor = getDialog(page, {
     name: "Edit roommate",
     exact: true,
   });
-  await editor
-    .getByLabel("Avatar", { exact: true })
-    .selectOption({ label: "🚀 Rocket" });
+  await selectControl(editor.getByLabel("Avatar", { exact: true }), {
+    label: "🚀 Rocket",
+  });
   await editor.getByRole("button", { name: "Save roommate" }).click();
   await page
     .getByRole("button", { name: "Archive Roommate 20", exact: true })
     .click();
-  await page
-    .getByRole("dialog", { name: "Archive Roommate 20?", exact: true })
+  await getDialog(page, { name: "Archive Roommate 20?", exact: true })
     .getByRole("button", { name: "Archive roommate", exact: true })
     .click();
-  await expect(page.getByLabel("Switch demo perspective")).toHaveValue(
+  await expectControlValue(
+    page.getByLabel("Switch demo perspective"),
     original.members[0].id,
   );
   await addMember(page, "Replacement");
@@ -307,8 +316,7 @@ test("20-roommate setup, new avatars and restore limits persist on mobile and de
   await page
     .getByRole("button", { name: "Archive Replacement", exact: true })
     .click();
-  await page
-    .getByRole("dialog", { name: "Archive Replacement?", exact: true })
+  await getDialog(page, { name: "Archive Replacement?", exact: true })
     .getByRole("button", { name: "Archive roommate", exact: true })
     .click();
   await page
@@ -357,7 +365,7 @@ for (const [name, raw] of [
     await page
       .getByRole("button", { name: "Reset saved data", exact: true })
       .click();
-    const dialog = page.getByRole("dialog", {
+    const dialog = getDialog(page, {
       name: "Reset saved data?",
       exact: true,
     });
@@ -431,8 +439,8 @@ test("failed writes keep setup and settings drafts available for retry", async (
   await expect(
     page.getByRole("alert").filter({ hasText: "Couldn't save changes" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Household name")).toHaveValue("Cedar House");
-  await expect(page.getByLabel("Roommate 1 name")).toHaveValue("Alex");
+  await expectControlValue(page.getByLabel("Household name"), "Cedar House");
+  await expectControlValue(page.getByLabel("Roommate 1 name"), "Alex");
   expect(await saved(page)).toBeNull();
   await page.evaluate(() =>
     (
@@ -468,7 +476,7 @@ test("failed writes keep setup and settings drafts available for retry", async (
   });
   await page.getByLabel("Household name").fill("Unsaved name");
   await page.getByRole("button", { name: "Save household" }).click();
-  await expect(page.getByLabel("Household name")).toHaveValue("Unsaved name");
+  await expectControlValue(page.getByLabel("Household name"), "Unsaved name");
   expect(await saved(page)).toEqual(before);
   await page.evaluate(() =>
     (
@@ -487,7 +495,7 @@ test("reset and start over require confirmation and retain data when storage fai
   await settings(page);
   const original = await saved(page);
   await page.getByRole("button", { name: "Reset demo", exact: true }).click();
-  let dialog = page.getByRole("dialog", {
+  let dialog = getDialog(page, {
     name: "Reset sample household?",
     exact: true,
   });
@@ -515,7 +523,7 @@ test("reset and start over require confirmation and retain data when storage fai
   expect(await saved(page)).toEqual(original);
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
   await page.getByRole("button", { name: "Start over", exact: true }).click();
-  dialog = page.getByRole("dialog", { name: "Start over?", exact: true });
+  dialog = getDialog(page, { name: "Start over?", exact: true });
   await dialog.getByRole("button", { name: "Erase household" }).click();
   await expect(dialog.getByRole("alert")).toContainText("Couldn't clear");
   expect(await saved(page)).toEqual(original);
@@ -528,16 +536,16 @@ test("reset and start over require confirmation and retain data when storage fai
   await page.getByLabel("Household name").fill("Changed household");
   await page.getByRole("button", { name: "Save household" }).click();
   await page.getByRole("button", { name: "Reset demo", exact: true }).click();
-  dialog = page.getByRole("dialog", {
+  dialog = getDialog(page, {
     name: "Reset sample household?",
     exact: true,
   });
   await dialog.getByRole("button", { name: "Reset demo", exact: true }).click();
   await expect(dialog).not.toBeVisible();
-  await expect(page.getByLabel("Household name")).toHaveValue("Maple House");
+  await expectControlValue(page.getByLabel("Household name"), "Maple House");
   expect((await saved(page))!.household.currency).toBe("USD");
   await page.getByRole("button", { name: "Start over", exact: true }).click();
-  dialog = page.getByRole("dialog", { name: "Start over?", exact: true });
+  dialog = getDialog(page, { name: "Start over?", exact: true });
   await dialog.getByRole("button", { name: "Erase household" }).click();
   await expect(page).toHaveURL(/\/welcome\/$/);
   expect(await saved(page)).toBeNull();
@@ -557,19 +565,20 @@ test("another tab cannot silently overwrite a draft or resurrect cleared data", 
   await expect(
     other.getByRole("button", { name: "Reload saved household" }),
   ).toBeVisible();
-  await expect(other.getByLabel("Household name")).toHaveValue(
+  await expectControlValue(
+    other.getByLabel("Household name"),
     "Unsaved other-tab draft",
   );
   await expect(
     other.getByRole("button", { name: "Save household" }),
   ).toBeDisabled();
   await other.getByRole("button", { name: "Reload saved household" }).click();
-  await expect(other.getByLabel("Household name")).toHaveValue(
+  await expectControlValue(
+    other.getByLabel("Household name"),
     "Saved in first tab",
   );
   await page.getByRole("button", { name: "Start over", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "Start over?", exact: true })
+  await getDialog(page, { name: "Start over?", exact: true })
     .getByRole("button", { name: "Erase household" })
     .click();
   await expect(

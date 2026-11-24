@@ -1,4 +1,5 @@
 "use client";
+import { Textarea } from "@/components/ui/primitives/textarea";
 
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ export function AgreementForm({
           >
             Details (optional)
           </label>
-          <textarea
+          <Textarea
             id="agreement-details"
             className={`${controlStyles} min-h-36 resize-y`}
             rows={6}

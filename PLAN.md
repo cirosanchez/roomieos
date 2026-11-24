@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Milestone 5 implementation and verification complete. No deployment performed.
+**Status:** Milestone 5 complete; shared UI refresh implemented and verified; ready for component review. No deployment performed.
 
-**Current milestone:** Milestone 5 — integration complete.
+**Current milestone:** UI refresh complete — awaiting user visual feedback.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -82,6 +82,7 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 | [x] | 3. Chores | CRUD, status/history, rotation/date confirmation, filters, List/Kanban, overdue; both views use identical state | Completed Monday |
 | [x] | 4. Expenses | Money utilities/tests first; then CRUD, multiple payers, three split modes, breakdowns, balances and settle/reopen | Completed Tuesday |
 | [x] | 5. Integration | Agreements CRUD, derived dashboard, complete sample data, consistent empty/error states and feedback | Completed Tuesday |
+| [x] | 5a. UI refresh | Shadcn/Base UI navigation and shared controls throughout; regression and visual review | Before release |
 | [ ] | 6. Release | Accessibility/mobile checks, production build, Vercel verification, video and real prompt transcript | Thursday |
 
 ### Milestone 1 TODOs
@@ -318,3 +319,13 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - [ ] User-perspective demonstration video of at most five minutes prepared.
 - [ ] Authentic complete dated Codex transcript exported and reviewed by the user; no invented or replacement prompt history.
 - [ ] Required submission materials prepared, with PRD/design appendices if useful.
+
+### Approved shared UI refresh — 24 November 2026
+
+- User approved shadcn/ui with Base UI for sidebar, buttons, custom selects, menus, dialogs and standard form choices across all screens. Preserve the warm neutral/blue design, existing page composition and household behavior. Desktop sidebar starts expanded, collapses to a temporary icon rail and uses a Sheet below 1024 px. No sidebar cookie or new storage key.
+- Custom calendars, broad card/table/badge redesigns and deployment are deferred. Date fields retain native calendar behavior with refreshed styling. The next step is the user's component-specific visual review.
+- Local shadcn base-nova sources are adapted for Lucide, RoomieOS tokens, touch targets, controlled overlays and the existing static architecture. Explicit typed SelectField options/value callbacks replace native select events. Household domain/store/schema remain unchanged.
+- Verification: 122 unit/storage tests pass. All 104 existing Chromium checks pass at 375/768/1280 px, with one intentional desktop drawer skip; the three added sidebar/keyboard checks pass in a focused run after correcting their reload fixture and adding explicit tooltip semantics. Lint, typecheck, source/test formatting and diff checks pass; the final production static build exports all routes successfully.
+- Reviewed desktop dashboard/collapsed-sidebar and mobile dashboard screenshots. Review artifacts are saved under `/tmp/roomieos-ui-review/`; browser-run screenshots remain in ignored `test-results/`. The new checks exercise collapsed tooltips, no cookies/new household writes on collapse, temporary expansion, mobile Sheet focus, keyboard profile selection and refresh persistence.
+- Migration fixes include the server-safe button-style export, nested overlay/focus restoration, long-text dialog wrapping, avatar label spacing and tooltip role. Existing browser tests now use custom options and menu semantics while retaining domain/persistence assertions.
+- Limits: Chromium verification only; native date calendars remain. No deployment or course deliverables performed. Ready for the user's component-by-component review before Milestone 6.

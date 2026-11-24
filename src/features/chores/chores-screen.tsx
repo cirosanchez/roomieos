@@ -1,4 +1,8 @@
 "use client";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/primitives/toggle-group";
 
 import { useState } from "react";
 import { CheckSquare, Columns3, List, Plus } from "lucide-react";
@@ -6,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import { PageHeader } from "@/components/ui/page-header";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectField, selectOptions } from "@/components/ui/select-field";
 import { StatusPill } from "@/components/ui/status-pill";
 import { choreStatuses, choreStatusLabels, isOverdue } from "@/domain/chores";
 import { displayDate } from "@/domain/dates";
@@ -69,23 +73,23 @@ export function ChoresScreen() {
           aria-label={`Change status for ${chore.title}`}
           value={chore.status}
           disabled={conflict}
-          onChange={(event) =>
+          onValueChange={(value) =>
             store.dispatch(
               {
                 type: "set-chore-status",
                 id: chore.id,
-                status: event.target.value as ChoreStatus,
+                status: value as ChoreStatus,
               },
               "Chore status updated.",
             )
           }
-        >
-          {choreStatuses.map((value) => (
-            <option key={value} value={value}>
-              {choreStatusLabels[value]}
-            </option>
-          ))}
-        </SelectField>
+          options={selectOptions(
+            choreStatuses.map((value) => ({
+              value: value,
+              label: <>{choreStatusLabels[value]}</>,
+            })),
+          )}
+        />
       </div>
     );
   }
@@ -103,64 +107,66 @@ export function ChoresScreen() {
         }
       />
       <div className="mb-6 flex flex-wrap items-end gap-4">
-        <div
-          role="group"
+        <ToggleGroup
+          value={[view]}
+          onValueChange={(values) => {
+            if (values[0] === "list" || values[0] === "board")
+              setView(values[0]);
+          }}
           aria-label="Chore view"
           className="flex self-end rounded-[7px] border border-line bg-subtle p-1"
         >
-          <Button
-            variant={view === "list" ? "secondary" : "ghost"}
-            aria-pressed={view === "list"}
-            onClick={() => setView("list")}
-          >
+          <ToggleGroupItem value="list" className="min-h-11 px-4">
             <List aria-hidden="true" className="size-4" />
             List
-          </Button>
-          <Button
-            variant={view === "board" ? "secondary" : "ghost"}
-            aria-pressed={view === "board"}
-            onClick={() => setView("board")}
-          >
+          </ToggleGroupItem>
+          <ToggleGroupItem value="board" className="min-h-11 px-4">
             <Columns3 aria-hidden="true" className="size-4" />
             Board
-          </Button>
-        </div>
+          </ToggleGroupItem>
+        </ToggleGroup>
         <div className="min-w-0 flex-1 basis-40">
           <SelectField
             id="chore-status-filter"
             label="Filter by status"
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <option value="all">All statuses</option>
-            {choreStatuses.map((value) => (
-              <option key={value} value={value}>
-                {choreStatusLabels[value]}
-              </option>
-            ))}
-          </SelectField>
+            onValueChange={(value) => setStatus(value)}
+            options={selectOptions(
+              { value: "all", label: <>All statuses</> },
+              choreStatuses.map((value) => ({
+                value: value,
+                label: <>{choreStatusLabels[value]}</>,
+              })),
+            )}
+          />
         </div>
         <div className="min-w-0 flex-1 basis-44">
           <SelectField
             id="chore-member-filter"
             label="Filter by roommate"
             value={assigneeId}
-            onChange={(event) => setAssigneeId(event.target.value)}
-          >
-            <option value="all">All roommates</option>
-            {members
-              .filter(
-                (member) =>
-                  member.active ||
-                  state.chores.some((chore) => chore.assigneeId === member.id),
-              )
-              .map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                  {!member.active && " (archived)"}
-                </option>
-              ))}
-          </SelectField>
+            onValueChange={(value) => setAssigneeId(value)}
+            options={selectOptions(
+              { value: "all", label: <>All roommates</> },
+              members
+                .filter(
+                  (member) =>
+                    member.active ||
+                    state.chores.some(
+                      (chore) => chore.assigneeId === member.id,
+                    ),
+                )
+                .map((member) => ({
+                  value: member.id,
+                  label: (
+                    <>
+                      {member.name}
+                      {!member.active && " (archived)"}
+                    </>
+                  ),
+                })),
+            )}
+          />
         </div>
       </div>
       {state.chores.length === 0 ? (
@@ -226,12 +232,13 @@ export function ChoresScreen() {
                     {chores.map((chore) => (
                       <tr key={chore.id}>
                         <td className="p-4 align-top">
-                          <button
+                          <Button
+                            variant="ghost"
                             onClick={() => openChore(chore)}
-                            className="min-h-11 max-w-full rounded text-left font-semibold text-accent underline-offset-4 hover:underline [overflow-wrap:anywhere]"
+                            className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent underline-offset-4 hover:underline [overflow-wrap:anywhere]"
                           >
                             {chore.title}
-                          </button>
+                          </Button>
                         </td>
                         <td className="p-4 align-top">{memberLabel(chore)}</td>
                         <td className="p-4 align-top">
@@ -253,12 +260,13 @@ export function ChoresScreen() {
                     key={chore.id}
                     className="space-y-4 rounded-[10px] border border-line p-4"
                   >
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => openChore(chore)}
-                      className="min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
+                      className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
                     >
                       {chore.title}
-                    </button>
+                    </Button>
                     {memberLabel(chore)}
                     <p className="text-sm text-muted">
                       Due {displayDate(chore.dueDate)}
@@ -298,12 +306,13 @@ export function ChoresScreen() {
                             key={chore.id}
                             className="space-y-3 rounded-[7px] border border-line bg-page p-4"
                           >
-                            <button
-                              className="min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
+                            <Button
+                              variant="ghost"
+                              className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
                               onClick={() => openChore(chore)}
                             >
                               {chore.title}
-                            </button>
+                            </Button>
                             {memberLabel(chore)}
                             <p className="text-sm text-muted">
                               Due {displayDate(chore.dueDate)}

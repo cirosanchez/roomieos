@@ -100,15 +100,16 @@ export function DashboardScreen() {
             <ul className="divide-y divide-line rounded-[10px] border border-line">
               {summary.pendingChores.map((chore) => (
                 <li key={chore.id} className="space-y-2 p-4">
-                  <button
-                    className="min-h-11 max-w-full rounded text-left font-semibold text-accent underline-offset-4 hover:underline [overflow-wrap:anywhere]"
+                  <Button
+                    variant="ghost"
+                    className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent underline-offset-4 hover:underline [overflow-wrap:anywhere]"
                     onClick={() => {
                       store.dismissFeedback();
                       setSelectedId(chore.id);
                     }}
                   >
                     {chore.title}
-                  </button>
+                  </Button>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <time
                       dateTime={chore.dueDate}

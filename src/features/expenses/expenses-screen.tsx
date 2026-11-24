@@ -106,12 +106,13 @@ export function ExpensesScreen() {
                 {expenses.map((expense) => (
                   <tr key={expense.id}>
                     <td className="p-3 align-top">
-                      <button
-                        className="min-h-11 max-w-full rounded text-left font-semibold text-accent underline-offset-4 hover:underline [overflow-wrap:anywhere]"
+                      <Button
+                        variant="ghost"
+                        className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent underline-offset-4 hover:underline [overflow-wrap:anywhere]"
                         onClick={() => open(expense)}
                       >
                         {expense.description}
-                      </button>
+                      </Button>
                     </td>
                     <td className="break-words p-3 align-top">
                       {expense.category}
@@ -143,12 +144,13 @@ export function ExpensesScreen() {
                 className="space-y-4 rounded-[10px] border border-line p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => open(expense)}
-                    className="min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
+                    className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
                   >
                     {expense.description}
-                  </button>
+                  </Button>
                   <StatusPill status={expense.status} />
                 </div>
                 <p className="text-sm text-muted">

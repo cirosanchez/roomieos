@@ -1,6 +1,6 @@
 "use client";
 
-import { SelectField } from "@/components/ui/select-field";
+import { SelectField, selectOptions } from "@/components/ui/select-field";
 import { currencies } from "@/domain/validation";
 import { avatarGroups, avatarOptions } from "@/domain/household-options";
 import type { Currency, Member } from "@/domain/types";
@@ -22,14 +22,14 @@ export function CurrencyField({
       label="Household currency"
       value={value}
       disabled={disabled}
-      onChange={(event) => onChange(event.target.value as Currency)}
-    >
-      {currencies.map((currency) => (
-        <option key={currency} value={currency}>
-          {currency}
-        </option>
-      ))}
-    </SelectField>
+      onValueChange={(value) => onChange(value as Currency)}
+      options={selectOptions(
+        currencies.map((currency) => ({
+          value: currency,
+          label: <>{currency}</>,
+        })),
+      )}
+    />
   );
 }
 
@@ -49,27 +49,30 @@ export function AvatarField({
       id={id}
       label={label}
       value={avatar.kind === "icon" ? avatar.value : "initials"}
-      onChange={(event) =>
+      onValueChange={(value) =>
         onChange(
-          event.target.value === "initials"
+          value === "initials"
             ? { kind: "initials", value: "" }
-            : { kind: "icon", value: event.target.value },
+            : { kind: "icon", value: value },
         )
       }
-    >
-      <option value="initials">Initials</option>
-      {avatarGroups.map((group) => (
-        <optgroup key={group} label={group}>
-          {avatarOptions
+      options={selectOptions(
+        { value: "initials", label: <>Initials</> },
+        avatarGroups.map((group) => [
+          avatarOptions
             .filter((option) => option.group === group)
-            .map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.value} {option.name}
-              </option>
-            ))}
-        </optgroup>
-      ))}
-    </SelectField>
+            .map((option) => ({
+              value: option.value,
+              label: (
+                <>
+                  {option.value} {option.name}
+                </>
+              ),
+              group: group,
+            })),
+        ]),
+      )}
+    />
   );
 }
 

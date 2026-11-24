@@ -1,11 +1,17 @@
 "use client";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/primitives/toggle-group";
+import { Checkbox } from "@/components/ui/primitives/checkbox";
+import { Textarea } from "@/components/ui/primitives/textarea";
 
 import { useState, type FormEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { FormField, controlStyles } from "@/components/ui/form-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectField, selectOptions } from "@/components/ui/select-field";
 import { InlineNotice } from "@/components/ui/inline-notice";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import { expenseCategories } from "@/domain/expenses";
@@ -139,19 +145,22 @@ export function ExpenseForm({
             label="Category (required)"
             required
             value={draft.category}
-            onChange={(event) => change({ category: event.target.value })}
+            onValueChange={(value) => change({ category: value })}
             error={errors.category}
-          >
-            {expense &&
-              !expenseCategories.some(
-                (category) => category === expense.category,
-              ) && <option value={expense.category}>{expense.category}</option>}
-            {expenseCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </SelectField>
+            options={selectOptions(
+              expense &&
+                !expenseCategories.some(
+                  (category) => category === expense.category,
+                ) && {
+                  value: expense.category,
+                  label: <>{expense.category}</>,
+                },
+              expenseCategories.map((category) => ({
+                value: category,
+                label: <>{category}</>,
+              })),
+            )}
+          />
           <div className="space-y-2">
             <label
               htmlFor="expense-notes"
@@ -159,7 +168,7 @@ export function ExpenseForm({
             >
               Notes (optional)
             </label>
-            <textarea
+            <Textarea
               id="expense-notes"
               className={`${controlStyles} min-h-24 resize-y`}
               rows={3}
@@ -195,35 +204,36 @@ export function ExpenseForm({
                   label={`Payer ${index + 1}`}
                   required
                   value={row.memberId}
-                  onChange={(event) =>
+                  onValueChange={(value) =>
                     change({
                       payers: draft.payers.map((item, itemIndex) =>
                         itemIndex === index
-                          ? { ...item, memberId: event.target.value }
+                          ? { ...item, memberId: value }
                           : item,
                       ),
                     })
                   }
                   error={errors[`payer-${index}-member`]}
-                >
-                  {members
-                    .filter(
-                      (member) => member.active || member.id === row.memberId,
-                    )
-                    .map((member) => (
-                      <option
-                        key={member.id}
-                        value={member.id}
-                        disabled={draft.payers.some(
+                  options={selectOptions(
+                    members
+                      .filter(
+                        (member) => member.active || member.id === row.memberId,
+                      )
+                      .map((member) => ({
+                        value: member.id,
+                        label: (
+                          <>
+                            {member.name}
+                            {!member.active && " (archived — current payer)"}
+                          </>
+                        ),
+                        disabled: draft.payers.some(
                           (item, itemIndex) =>
                             itemIndex !== index && item.memberId === member.id,
-                        )}
-                      >
-                        {member.name}
-                        {!member.active && " (archived — current payer)"}
-                      </option>
-                    ))}
-                </SelectField>
+                        ),
+                      })),
+                  )}
+                />
                 <FormField
                   id={`payer-${index}-amount`}
                   label={`Contribution ${index + 1} (${state.household.currency})`}
@@ -334,13 +344,12 @@ export function ExpenseForm({
                   key={member.id}
                   className={`flex min-h-11 max-w-full cursor-pointer items-center gap-2 rounded-[7px] border px-3 py-2 ${draft.participantIds.includes(member.id) ? "border-accent bg-selected" : "border-line bg-page"}`}
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     className="size-4 shrink-0 accent-accent"
                     checked={draft.participantIds.includes(member.id)}
-                    onChange={(event) =>
+                    onCheckedChange={(checked) =>
                       change({
-                        participantIds: event.target.checked
+                        participantIds: checked
                           ? [...draft.participantIds, member.id]
                           : draft.participantIds.filter(
                               (id) => id !== member.id,
@@ -378,22 +387,24 @@ export function ExpenseForm({
           <h3 id="split-heading" className="font-semibold">
             Split it
           </h3>
-          <div
-            role="group"
+          <ToggleGroup
+            value={[draft.splitMethod]}
+            onValueChange={(values) => {
+              if (values[0]) chooseSplit(values[0] as typeof draft.splitMethod);
+            }}
             aria-label="Split method"
             className="flex w-fit max-w-full flex-wrap rounded-[7px] border border-line bg-subtle p-1"
           >
             {(["equal", "percentage", "fixed"] as const).map((method) => (
-              <Button
+              <ToggleGroupItem
                 key={method}
-                variant={draft.splitMethod === method ? "secondary" : "ghost"}
-                aria-pressed={draft.splitMethod === method}
-                onClick={() => chooseSplit(method)}
+                value={method}
+                className="min-h-11 px-4"
               >
                 {splitLabels[method]}
-              </Button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
           {draft.splitMethod === "equal" ? (
             <p className="text-sm text-muted">
               Shares follow roster order. Any extra cents go to the first

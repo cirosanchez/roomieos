@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { SelectField } from "@/components/ui/select-field";
 import { activeMembers } from "@/domain/household";
 import { useReadyHousehold } from "@/state/household-provider";
 import { MemberAvatar } from "@/components/ui/member-avatar";
@@ -19,33 +19,36 @@ export function ProfileSwitcher() {
           selected.avatar.kind === "icon" ? selected.avatar.value : undefined
         }
       />
-      <label className="min-w-0">
-        <span className="block text-xs text-muted">Demo perspective</span>
-        <span className="relative block">
-          <select
-            aria-label="Switch demo perspective"
-            value={selected.id}
-            disabled={conflict}
-            onChange={(event) =>
-              store.dispatch(
-                { type: "select-member", id: event.target.value },
-                "Demo perspective changed.",
-              )
-            }
-            className="min-h-11 w-32 max-w-full appearance-none truncate rounded pr-6 text-sm font-medium sm:w-40"
-          >
-            {members.map((member) => (
-              <option key={member.id} value={member.id}>
-                {member.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 right-1 size-4 -translate-y-1/2 text-muted"
-          />
-        </span>
-      </label>
+      <SelectField
+        id="demo-perspective"
+        label="Demo perspective"
+        aria-label="Switch demo perspective"
+        value={selected.id}
+        disabled={conflict}
+        onValueChange={(value) =>
+          store.dispatch(
+            { type: "select-member", id: value },
+            "Demo perspective changed.",
+          )
+        }
+        options={members.map((member) => ({
+          value: member.id,
+          label: (
+            <>
+              <MemberAvatar
+                name={member.name}
+                icon={
+                  member.avatar.kind === "icon"
+                    ? member.avatar.value
+                    : undefined
+                }
+              />
+              {member.name}
+            </>
+          ),
+        }))}
+        className="w-32 sm:w-40"
+      />
     </div>
   );
 }
