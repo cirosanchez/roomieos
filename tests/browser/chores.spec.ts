@@ -173,6 +173,13 @@ test("filters, overdue and board status controls agree with list and fit the vie
 }, testInfo) => {
   await seed(page);
   await expect(
+    page.getByRole("button", { name: "Board", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("region", { name: "Chore board", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "List", exact: true }).click();
+  await expect(
     page.getByText("Overdue", { exact: true }).filter({ visible: true }),
   ).toHaveCount(1);
   await page.getByLabel("Filter by roommate").selectOption("jordan");
@@ -225,6 +232,9 @@ test("filters, overdue and board status controls agree with list and fit the vie
       .filter({ visible: true }),
   ).toHaveValue("skipped");
   await page.reload();
+  await expect(
+    page.getByRole("region", { name: "Chore board", exact: true }),
+  ).toBeVisible();
   await expect(
     page
       .getByLabel("Change status for Clean the kitchen")
@@ -381,6 +391,7 @@ test("long chore content wraps in List, Board and dialogs", async ({
   state.members[0].name = "A".repeat(40);
   state.members[1].name = "J".repeat(40);
   await seed(page, state);
+  await page.getByRole("button", { name: "List", exact: true }).click();
   await noOverflow(page);
   await page.getByRole("button", { name: "Board", exact: true }).click();
   await noOverflow(page);

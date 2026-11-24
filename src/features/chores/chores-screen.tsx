@@ -19,7 +19,7 @@ import { ChoreDetails } from "./chore-details";
 export function ChoresScreen() {
   const { state, store, conflict } = useReadyHousehold();
   const today = useToday();
-  const [view, setView] = useState<"list" | "board">("list");
+  const [view, setView] = useState<"list" | "board">("board");
   const [status, setStatus] = useState("all");
   const [assigneeId, setAssigneeId] = useState("all");
   const [creating, setCreating] = useState(false);

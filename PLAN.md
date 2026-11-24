@@ -240,6 +240,12 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Limits: Chromium verification only; view/filter choices are temporary UI state, while chore facts and history persist. Expenses/agreements remain read-only, and final dashboard composition stays in later milestones. No deployment performed.
 - Next slice: Milestone 4, beginning with integer-cent financial utilities and tests before expense forms, balances and settlement.
 
+### Chore view feedback — 23 November 2026
+
+- The user requested Kanban for the chore view. Chores now opens in Board by default, including after refresh, with Pending/Completed/Skipped columns; List remains available through the existing switcher.
+- Updated existing browser checks to assert the initial/refreshed Board and explicitly exercise List before switching back. All 21 chore browser checks pass at 375/768/1280 px; 65 unit/storage tests, lint, typecheck and the production build pass. No new test suite or dependency added.
+- Manual check: open Chores, switch to List and back, change a card's status, then refresh. On a phone, scroll within the board to reach all three columns.
+
 ### Manual review after Milestone 3
 
 - From an empty household, add a chore with notes and a due date; cancel an edit, save another, then refresh. Confirm all saved fields remain.
