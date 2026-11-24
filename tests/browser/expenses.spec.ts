@@ -86,10 +86,10 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
   });
   await saveForm(page);
   await expect(myNet(page)).toContainText("CAD 0.66");
-  await expect(myNet(page)).toContainText("you are owed");
+  await expect(myNet(page)).toContainText("You are owed");
   await expect(
     page.getByRole("region", { name: "Who owes whom" }),
-  ).toContainText("Jordan owes Avery");
+  ).toContainText("Jordan owes you CAD 0.33.");
   await title(page, "Shared snacks").click();
   const details = getDialog(page, {
     name: "Shared snacks",
@@ -145,7 +145,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
   await expect(myNet(page)).toContainText("CAD 0.66");
   await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(myNet(page)).toContainText("CAD 0.33");
-  await expect(myNet(page)).toContainText("you owe");
+  await expect(myNet(page)).toContainText("You owe");
   await title(page, "Shared snacks").click();
   await details
     .getByRole("button", { name: "Edit expense", exact: true })
@@ -617,4 +617,67 @@ test("a settlement in another tab blocks an open expense draft until reload", as
     status: "settled",
   });
   await other.close();
+});
+
+test("net position signs, colors and plain-language summaries follow the selected roommate", async ({
+  page,
+}, testInfo) => {
+  const state = createSampleHousehold(new Date());
+  state.chores = [];
+  state.members.push({
+    id: "taylor",
+    name: "Taylor",
+    avatar: { kind: "initials", value: "" },
+    active: true,
+    order: 3,
+  });
+  state.expenses = [
+    {
+      ...state.expenses[0],
+      amountCents: 6000,
+      payers: [
+        { memberId: "jordan", amountCents: 4000 },
+        { memberId: "sam", amountCents: 2000 },
+      ],
+      participants: [{ memberId: "avery", amountCents: 6000 }],
+      splitMethod: "equal",
+      status: "open",
+    },
+  ];
+  await seed(page, state);
+  const amount = myNet(page).locator("[data-net-amount]");
+  const summary = page.getByRole("region", {
+    name: "Who owes whom",
+    exact: true,
+  });
+  await expect(amount).toHaveText("-CAD 60.00");
+  await expect(amount).toHaveClass(/text-danger/);
+  await expect(myNet(page)).toContainText(
+    "You owe CAD 60.00 in total to Jordan and Sam.",
+  );
+  await expect(summary).toContainText("You owe CAD 40.00 to Jordan.");
+  await expect(summary).toContainText("You owe CAD 20.00 to Sam.");
+  await expect(myNet(page)).not.toContainText("Avery:");
+  await page.screenshot({
+    path: testInfo.outputPath("expense-summary-owing.png"),
+    fullPage: true,
+  });
+  await selectControl(page.getByLabel("Switch demo perspective"), "jordan");
+  await expect(amount).toHaveText("CAD 40.00");
+  await expect(amount).toHaveClass(/text-success/);
+  await expect(myNet(page)).toContainText(
+    "You are owed CAD 40.00 in total by Avery.",
+  );
+  await expect(summary).toContainText("Avery owes you CAD 40.00.");
+  await expect(summary).toContainText("Other household balances");
+  await expect(summary).toContainText("Avery owes CAD 20.00 to Sam.");
+  await page.reload();
+  await expect(amount).toHaveText("CAD 40.00");
+  await selectControl(page.getByLabel("Switch demo perspective"), "taylor");
+  await expect(amount).toHaveText("CAD 0.00");
+  await expect(amount).toHaveClass(/text-muted/);
+  await expect(myNet(page)).toContainText("You have no outstanding balance.");
+  await expect(summary).toContainText("Avery owes CAD 40.00 to Jordan.");
+  expect((await saved(page))!.expenses).toEqual(state.expenses);
+  await noOverflow(page);
 });

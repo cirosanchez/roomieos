@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Selected-roommate chore boards and filter removal implemented and verified. No deployment performed.
+**Status:** Expense net-position styling and readable balance summaries implemented and verified. No deployment performed.
 
-**Current milestone:** Component review — selected-roommate boards complete.
+**Current milestone:** Component review — expense balance summary complete.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -364,3 +364,10 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Verification: 122 unit/storage tests pass, along with lint, typecheck, source/test formatting, diff checks and the production static build. The broader chore/drag/integration/setup run passed 90 checks and exposed one phone long-name overflow; after adding wrapping, the closing chore/drag/integration regression passes all 61 checks, with two intentional skips for phone-only real touch coverage.
 - Checks at 375/768/1280px cover removal of both filters, profile isolation/switch/refresh without modifying shared chores, 40-character-name personal empty states, selected-profile form defaults, preserved completion history through reassignment/rotation, archived history editing/guards, all-status tags, pointer/touch/keyboard moves and gesture cancellation on perspective changes. Existing setup/roster/storage flows also passed in the broader run.
 - Reviewed the personal desktop board screenshot; previews for desktop/tablet/phone are saved under `/tmp/roomieos-personal-board-review/`. Manual review: switch demo perspectives, refresh, add a chore and confirm the default assignee; reassign/rotate a chore and check that it appears on the new assignee's board. Archived roster entries with chores expose Chore history in Settings. Chromium only; no deployment performed.
+
+### Expense balance summary — 24 November 2026
+
+- User requested red negative net amounts when owing, green unsigned positive amounts when owed, and readable perspective-relative sentences. Keep zero neutral. Replace the selected-name/colon caption with a total naming the relevant counterparties, derived from existing simplified transfers.
+- Prioritize selected-roommate transfer sentences (You owe amount to name / name owes you amount); retain unrelated balances in Other household balances. Keep currency explicit, open-only arithmetic and outside-app whole-expense settlement semantics unchanged. No form, ledger, schema or action changes.
+- Verification: 122 unit/storage tests and all 45 Chromium expense/integration checks pass at 375/768/1280px. Lint, typecheck, source/test formatting, diff checks and production static build pass. New browser coverage checks red -CAD 60.00 split into CAD 40.00/CAD 20.00 sentences, green unsigned creditor amounts, neutral zero with unrelated household debts, profile switch/refresh and unchanged expense records. Existing rounding, settlement/reopen, storage-failure, archived-role and large-household regressions pass.
+- Reviewed the desktop summary screenshot; desktop/tablet/phone previews are saved under `/tmp/roomieos-expense-summary-review/`. Manual review: switch among a debtor, creditor and even roommate, then settle/reopen an expense and refresh. Keep household currency explicit. Forms, dashboard card presentation and domain calculations remain unchanged; Chromium only and no deployment performed.

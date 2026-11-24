@@ -171,7 +171,7 @@ Archived roommates’ chore history remains reachable from their roster entry in
 
 Header: `Expenses` / `Track shared spending without the spreadsheet.` / `+ Add expense`.
 
-Top section: selected roommate's balance summary and a `Who owes whom` panel showing simplified transfers, each on one understandable line: `Jordan owes Avery · CAD 15.00` with avatars. If nobody owes anyone, show `All settled up`.
+Top section: selected roommate's balance summary and a `Who owes whom` panel. Net amounts are red with a minus sign when owing, green without a plus sign when owed, and neutral at zero (user-approved 24 November 2026). Use direct sentences such as `You owe CAD 30.00 to Jordan` and `Jordan owes you CAD 15.00`. Name counterparties in the personal total; for multiple people, make clear that the amount is the total. Prioritize selected-roommate transfers, then show Other household balances. Retain explicit currency and avatars. If nobody owes anyone, show `All settled up`.
 
 Below: a table/list of expenses with description, category, date, paid by (multiple payer avatars supported), total and `Open / Settled` label. Details shows the breakdown and actions to edit, settle/reopen or delete.
 

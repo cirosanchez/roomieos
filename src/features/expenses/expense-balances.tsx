@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowRight, Scale } from "lucide-react";
+import { Scale } from "lucide-react";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import {
   calculateBalances,
   formatMoney,
   simplifyBalances,
+  type SuggestedTransfer,
 } from "@/domain/money";
 import { useReadyHousehold } from "@/state/household-provider";
 
@@ -15,10 +16,73 @@ export function ExpenseBalances() {
   const net = balances.find(
     (row) => row.memberId === state.selectedMemberId,
   )!.netCents;
-  const selected = state.members.find(
-    (member) => member.id === state.selectedMemberId,
-  )!;
   const transfers = simplifyBalances(balances);
+  const personal = transfers.filter(
+    (row) =>
+      row.fromId === state.selectedMemberId ||
+      row.toId === state.selectedMemberId,
+  );
+  const household = transfers.filter(
+    (row) =>
+      row.fromId !== state.selectedMemberId &&
+      row.toId !== state.selectedMemberId,
+  );
+  const names = personal.map(
+    (row) =>
+      state.members.find(
+        (member) => member.id === (net < 0 ? row.toId : row.fromId),
+      )!.name,
+  );
+  const people = new Intl.ListFormat("en", {
+    style: "long",
+    type: "conjunction",
+  }).format(names);
+  const amount = formatMoney(Math.abs(net), state.household.currency);
+  const tone =
+    net < 0 ? "text-danger" : net > 0 ? "text-success" : "text-muted";
+  function transferRow(transfer: SuggestedTransfer) {
+    const from = state.members.find((member) => member.id === transfer.fromId)!;
+    const to = state.members.find((member) => member.id === transfer.toId)!;
+    const outgoing = from.id === state.selectedMemberId;
+    const incoming = to.id === state.selectedMemberId;
+    const counterpart = outgoing ? to : from;
+    return (
+      <li
+        key={`${from.id}-${to.id}`}
+        className="flex min-w-0 items-start gap-3 py-3 first:pt-0"
+      >
+        <div className="flex shrink-0 -space-x-1.5">
+          <MemberAvatar
+            name={counterpart.name}
+            icon={
+              counterpart.avatar.kind === "icon"
+                ? counterpart.avatar.value
+                : undefined
+            }
+          />
+          {!outgoing && !incoming && (
+            <MemberAvatar
+              name={to.name}
+              icon={to.avatar.kind === "icon" ? to.avatar.value : undefined}
+            />
+          )}
+        </div>
+        <p className="min-w-0 flex-1 break-words text-sm leading-7">
+          {outgoing
+            ? "You owe "
+            : incoming
+              ? `${from.name} owes you `
+              : `${from.name} owes `}
+          <strong
+            className={`font-semibold tabular-nums ${outgoing ? "text-danger" : incoming ? "text-success" : "text-ink"}`}
+          >
+            {formatMoney(transfer.amountCents, state.household.currency)}
+          </strong>
+          {incoming ? "." : ` to ${to.name}.`}
+        </p>
+      </li>
+    );
+  }
   return (
     <div className="mb-9 grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
       <section
@@ -26,16 +90,20 @@ export function ExpenseBalances() {
         aria-label="My net position"
       >
         <h2 className="text-sm font-medium text-muted">My net position</h2>
-        <p className="mt-3 break-words text-2xl font-semibold tabular-nums">
-          {formatMoney(Math.abs(net), state.household.currency)}
+        <p
+          data-net-amount
+          className={`mt-3 break-words text-3xl font-semibold tabular-nums ${tone}`}
+        >
+          {formatMoney(net, state.household.currency)}
         </p>
-        <p className="mt-2 break-words text-sm text-muted">
-          {selected.name}:{" "}
-          {net > 0 ? "you are owed" : net < 0 ? "you owe" : "you are even"}.
+        <p className="mt-3 break-words text-sm leading-relaxed text-ink">
+          {net < 0
+            ? `You owe ${amount} in total to ${people}.`
+            : net > 0
+              ? `You are owed ${amount} in total by ${people}.`
+              : "You have no outstanding balance."}
         </p>
-        <p className="mt-4 text-xs leading-relaxed text-muted">
-          Contributions minus shares, across open expenses only.
-        </p>
+        <p className="mt-4 text-xs text-muted">Across open expenses only.</p>
       </section>
       <section
         className="min-w-0 rounded-[10px] border border-line p-5"
@@ -49,52 +117,34 @@ export function ExpenseBalances() {
           Who owes whom
         </h2>
         {transfers.length ? (
-          <ul className="mt-4 divide-y divide-line">
-            {transfers.map((transfer) => {
-              const from = state.members.find(
-                (member) => member.id === transfer.fromId,
-              )!;
-              const to = state.members.find(
-                (member) => member.id === transfer.toId,
-              )!;
-              return (
-                <li
-                  key={`${from.id}-${to.id}`}
-                  className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <MemberAvatar
-                      name={from.name}
-                      icon={
-                        from.avatar.kind === "icon"
-                          ? from.avatar.value
-                          : undefined
-                      }
-                    />
-                    <ArrowRight
-                      aria-hidden="true"
-                      className="size-4 shrink-0 text-muted"
-                    />
-                    <MemberAvatar
-                      name={to.name}
-                      icon={
-                        to.avatar.kind === "icon" ? to.avatar.value : undefined
-                      }
-                    />
-                    <p className="min-w-0 break-words text-sm">
-                      {from.name} owes {to.name}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold tabular-nums">
-                    {formatMoney(
-                      transfer.amountCents,
-                      state.household.currency,
-                    )}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            {personal.length > 0 ? (
+              <ul
+                aria-label="Your suggested balances"
+                className="mt-4 divide-y divide-line"
+              >
+                {personal.map(transferRow)}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-muted">
+                You have no outstanding balance in this household.
+              </p>
+            )}
+            {household.length > 0 && (
+              <div
+                className={
+                  personal.length ? "mt-4 border-t border-line pt-4" : "mt-4"
+                }
+              >
+                <h3 className="mb-3 text-xs font-medium text-muted">
+                  Other household balances
+                </h3>
+                <ul className="divide-y divide-line">
+                  {household.map(transferRow)}
+                </ul>
+              </div>
+            )}
+          </>
         ) : (
           <div className="mt-4">
             <p className="text-sm font-medium">All settled up</p>
@@ -105,8 +155,8 @@ export function ExpenseBalances() {
           </div>
         )}
         <p className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-muted">
-          Suggested netting across open expenses. No payment is requested or
-          made here. These suggestions do not mark individual expenses settled.
+          Suggested amounts from open expenses. Settle up outside RoomieOS, then
+          mark each fully resolved expense as settled.
         </p>
       </section>
     </div>
