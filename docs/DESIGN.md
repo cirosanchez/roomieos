@@ -153,7 +153,7 @@ Below: segmented `List | Board` control, status/roommate filters (compact). Pers
 
 **List view:** clean Notion-like table with columns: title, assigned to (avatar + name), due date, status; on narrow screens convert rows to cards. Notes visible in detail panel, not as wide text columns.
 
-**Kanban board:** exactly three columns with compact headers and counts: `Pending`, `Completed`, `Skipped`. Cards show title, assignee avatar, due date, optional one-line notes. Click opens details; status action reachable without drag/drop. Dragging between columns is **not necessary** and should not displace functional status controls.
+**Kanban board:** exactly three columns with compact headers and counts: `Pending`, `Completed`, `Skipped`. Cards show title, assignee avatar, due date, optional one-line notes. Click opens details; status action reachable without drag/drop. Approved UI-review enhancement (24 November 2026): cards can be dragged between columns using a handle or a non-interactive card surface with a mouse; touch uses the handle so the rest of the board remains scrollable. Highlight the destination column, support keyboard pickup/arrows/drop/Escape, and retain functional status selectors. Keep ordering within a column unchanged.
 
 **Create/edit modal or drawer fields:** Title (required), Assignee (active member picker), Due date (native date control), Notes (multiline, optional). Clearly label `Save` and `Cancel`. Form errors are inline.
 

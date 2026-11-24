@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Milestone 5 complete; shared UI refresh implemented and verified; ready for component review. No deployment performed.
+**Status:** Shared UI refresh and draggable Kanban polish implemented and verified. No deployment performed.
 
-**Current milestone:** UI refresh complete — awaiting user visual feedback.
+**Current milestone:** Component review — draggable chore cards complete.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -23,7 +23,7 @@ At plan approval, the repository contained documentation and a README, with no a
 - **History ordering:** Preserve completion events in append order; display newest first, as DESIGN specifies.
 - **Archived-member edge cases:** Historical records remain viewable and editable without losing member references. Before reopening an expense involving archived members, require their restoration. Before reopening a chore assigned to an archived member, require reassignment to an active member. Rotation can directly select the next active member.
 - **Design contrast:** Preserve the visual palette, but use sufficiently dark text variants where muted tokens fail contrast requirements.
-- **Priority:** All PRD must-haves remain MVP requirements. Defer photo uploads, drag-and-drop and decorative animation.
+- **Priority:** All PRD must-haves remain MVP requirements. Defer photo uploads and decorative animation. The user explicitly approved dependency-free chore-card dragging during UI review on 24 November 2026.
 
 ## 2. Architecture and state
 
@@ -329,3 +329,12 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Reviewed desktop dashboard/collapsed-sidebar and mobile dashboard screenshots. Review artifacts are saved under `/tmp/roomieos-ui-review/`; browser-run screenshots remain in ignored `test-results/`. The new checks exercise collapsed tooltips, no cookies/new household writes on collapse, temporary expansion, mobile Sheet focus, keyboard profile selection and refresh persistence.
 - Migration fixes include the server-safe button-style export, nested overlay/focus restoration, long-text dialog wrapping, avatar label spacing and tooltip role. Existing browser tests now use custom options and menu semantics while retaining domain/persistence assertions.
 - Limits: Chromium verification only; native date calendars remain. No deployment or course deliverables performed. Ready for the user's component-by-component review before Milestone 6.
+
+### Draggable chore cards — 24 November 2026
+
+- User requested GitHub-style card dragging for the Kanban board. Implemented a compact card presentation and moves between Pending/Completed/Skipped with pointer/touch/keyboard support; retain status selectors as an alternative. Within-column ordering remains the existing saved chore order; no ordering field or schema change.
+- Reused the existing save-before-publish set-chore-status action for every drop. Same-column/outside/cancelled drops save nothing; completed drops retain immutable history and archived-assignment/storage/conflict guards. No drag-and-drop dependency added.
+- Verification: 122 unit/storage tests pass; lint, typecheck, source/test formatting, diff checks and the production static build pass. Final Chromium chore/drag/integration regression passes 61 checks at 375/768/1280 px, with two intentional skips because real touch dragging is exercised on the phone only. Checks include pointer/keyboard moves, empty targets, same-column no-ops, outside/Escape cancellation, completion history, persistence/List agreement, storage retry, archive guards, cross-tab protection, real touch edge scrolling and focus after a move hides a filtered card.
+- Broader regression initially passed 119 checks and exposed phone viewport leakage from offscreen screen-reader labels plus an existing agreement-menu focus race. Containing those labels within their card wrapper restores the phone viewport; explicit dialog return-focus targets fix agreement edit cancellation. The closing 61-check run covers both corrections. One earlier regression run was externally terminated; only its confirmed leftover test server was stopped before retrying with four workers.
+- Reviewed desktop and phone card screenshots; previews are saved under `/tmp/roomieos-kanban-review/`. Portal menu events are excluded from card drag initiation, and touch dragging is confined to the handle so ordinary board scrolling remains available. No dependency, domain action, storage key or schema changed.
+- Manual review: drag a card into Completed, inspect its history, drag it back and refresh; try Space/arrows/Enter and Escape on a handle. On a phone, drag from the handle toward the board edge and confirm the page itself stays within the viewport. Within-column reordering remains unchanged. Chromium only; no deployment performed.

@@ -64,6 +64,9 @@ export function AgreementForm({
     <Dialog
       open
       title={agreement ? "Edit agreement" : "New agreement"}
+      returnFocusId={
+        agreement ? `agreement-actions-${agreement.id}` : undefined
+      }
       onClose={onClose}
     >
       <form noValidate onSubmit={submit} className="space-y-5">

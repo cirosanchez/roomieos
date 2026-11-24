@@ -25,7 +25,9 @@ function titleButton(page: Page, title: string) {
 async function noOverflow(page: Page) {
   expect(
     await page.evaluate(
-      () => document.documentElement.scrollWidth > innerWidth,
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
     ),
   ).toBe(false);
 }
@@ -78,7 +80,7 @@ test("empty chores CRUD, history, rotation and both views persist", async ({
   await expect(
     page
       .getByRole("region", { name: "Completed chores", exact: true })
-      .getByRole("button", { name: "Clean the oven" }),
+      .getByRole("button", { name: "Clean the oven", exact: true }),
   ).toBeVisible();
   await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await titleButton(page, "Clean the oven").click();
@@ -227,7 +229,7 @@ test("filters, overdue and board status controls agree with list and fit the vie
   await expect(
     page
       .getByRole("region", { name: "Skipped chores", exact: true })
-      .getByRole("button", { name: "Clean the kitchen" }),
+      .getByRole("button", { name: "Clean the kitchen", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Overdue", { exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "List", exact: true }).click();

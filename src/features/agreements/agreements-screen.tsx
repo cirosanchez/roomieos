@@ -37,6 +37,7 @@ function AgreementActions({
       }}
     >
       <DropdownMenuTrigger
+        id={`agreement-actions-${agreement.id}`}
         ref={trigger}
         render={
           <Button

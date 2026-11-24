@@ -17,6 +17,7 @@ import { displayDate } from "@/domain/dates";
 import type { Chore, ChoreStatus } from "@/domain/types";
 import { useReadyHousehold } from "@/state/household-provider";
 import { useToday } from "@/state/use-today";
+import { ChoreBoard } from "./chore-board";
 import { ChoreForm } from "./chore-form";
 import { ChoreDetails } from "./chore-details";
 
@@ -61,12 +62,14 @@ export function ChoresScreen() {
   function statusControl(chore: Chore, suffix: string) {
     return (
       <div className="min-w-0 space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusPill status={chore.status} />
-          {isOverdue(chore, today) && (
-            <span className="text-xs font-medium text-danger">Overdue</span>
-          )}
-        </div>
+        {suffix !== "board" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill status={chore.status} />
+            {isOverdue(chore, today) && (
+              <span className="text-xs font-medium text-danger">Overdue</span>
+            )}
+          </div>
+        )}
         <SelectField
           id={`${suffix}-${chore.id}-status`}
           label="Change status"
@@ -277,65 +280,20 @@ export function ChoresScreen() {
               </ul>
             </>
           ) : (
-            <div
-              role="region"
-              aria-label="Chore board"
-              tabIndex={0}
-              className="max-w-full overflow-x-auto rounded-[10px] pb-3"
-            >
-              <div className="grid min-w-[870px] grid-cols-3 items-start gap-4">
-                {choreStatuses.map((column) => {
-                  const items = chores.filter(
-                    (chore) => chore.status === column,
-                  );
-                  return (
-                    <section
-                      key={column}
-                      aria-label={`${choreStatusLabels[column]} chores`}
-                      className="min-w-0 rounded-[10px] border border-line bg-subtle p-3"
-                    >
-                      <h2 className="mb-3 flex items-center justify-between gap-2 px-1 text-sm font-semibold">
-                        {choreStatusLabels[column]}
-                        <span className="rounded bg-page px-2 py-1 text-xs text-muted">
-                          {items.length}
-                        </span>
-                      </h2>
-                      <ul className="space-y-3">
-                        {items.map((chore) => (
-                          <li
-                            key={chore.id}
-                            className="space-y-3 rounded-[7px] border border-line bg-page p-4"
-                          >
-                            <Button
-                              variant="ghost"
-                              className="h-auto min-w-0 whitespace-normal justify-start px-0 hover:bg-transparent min-h-11 max-w-full rounded text-left font-semibold text-accent [overflow-wrap:anywhere]"
-                              onClick={() => openChore(chore)}
-                            >
-                              {chore.title}
-                            </Button>
-                            {memberLabel(chore)}
-                            <p className="text-sm text-muted">
-                              Due {displayDate(chore.dueDate)}
-                            </p>
-                            {chore.notes && (
-                              <p className="truncate text-sm text-muted">
-                                {chore.notes}
-                              </p>
-                            )}
-                            {statusControl(chore, "board")}
-                          </li>
-                        ))}
-                      </ul>
-                      {!items.length && (
-                        <p className="px-1 py-5 text-sm text-muted">
-                          No {column} chores.
-                        </p>
-                      )}
-                    </section>
-                  );
-                })}
-              </div>
-            </div>
+            <ChoreBoard
+              chores={chores}
+              today={today}
+              disabled={conflict}
+              onOpen={openChore}
+              memberLabel={memberLabel}
+              statusControl={statusControl}
+              onMove={(chore, status) =>
+                store.dispatch(
+                  { type: "set-chore-status", id: chore.id, status },
+                  "Chore moved.",
+                )
+              }
+            />
           )}
         </>
       )}

@@ -15,6 +15,7 @@ type DialogProps = {
   variant?: "modal" | "drawer";
   id?: string;
   size?: "default" | "wide";
+  returnFocusId?: string;
 };
 export function Dialog({
   open,
@@ -25,6 +26,7 @@ export function Dialog({
   variant = "modal",
   id,
   size = "default",
+  returnFocusId,
 }: DialogProps) {
   const trigger = useRef<HTMLElement | null>(null);
   const capture = () => {
@@ -35,8 +37,11 @@ export function Dialog({
     return true;
   };
   const restore = () => {
-    if (trigger.current?.isConnected) {
-      trigger.current.focus();
+    const target =
+      (returnFocusId ? document.getElementById(returnFocusId) : null) ??
+      trigger.current;
+    if (target?.isConnected) {
+      target.focus();
       return false;
     }
     return true;
