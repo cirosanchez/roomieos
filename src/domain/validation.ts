@@ -32,6 +32,11 @@ export const choreDraftSchema = z.strictObject({
   dueDate: calendarDate,
 });
 
+export const agreementDraftSchema = z.strictObject({
+  title: text(100),
+  details: z.string().max(1000),
+});
+
 export const expenseDraftSchema = z.strictObject({
   description: text(100),
   amountCents: cents.positive(),
@@ -109,9 +114,7 @@ const stateSchema = z
         createdAt: timestamp,
       }),
     ),
-    agreements: z.array(
-      z.strictObject({ id, title: text(100), details: z.string().max(1000) }),
-    ),
+    agreements: z.array(agreementDraftSchema.extend({ id })),
     starterMode: z.enum(["sample", "empty"]),
   })
   .superRefine((state, ctx) => {

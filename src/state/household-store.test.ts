@@ -52,6 +52,78 @@ function harness(initial: string | null = null) {
 }
 
 describe("browser persistence transaction", () => {
+  it("saves agreement CRUD across refresh while retaining prior facts and drafts on a failed edit", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    expect(
+      h.store.dispatch(
+        {
+          type: "add-agreement",
+          agreement: { title: "Guests", details: "Ask first.\nKeep it calm." },
+        },
+        "Saved",
+      ).ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(h.store.getSnapshot().state!.agreements.at(-1)).toEqual({
+      id: "generated",
+      title: "Guests",
+      details: "Ask first.\nKeep it calm.",
+    });
+    const raw = h.raw();
+    const before = h.store.getSnapshot().state;
+    h.failWrites(true);
+    expect(
+      h.store.dispatch(
+        {
+          type: "edit-agreement",
+          id: "generated",
+          agreement: { title: "Updated", details: "" },
+        },
+        "Saved",
+      ).ok,
+    ).toBe(false);
+    expect(h.raw()).toBe(raw);
+    expect(h.store.getSnapshot().state).toBe(before);
+    expect(h.store.getSnapshot().notice).toBeNull();
+    h.failWrites(false);
+    expect(
+      h.store.dispatch(
+        {
+          type: "edit-agreement",
+          id: "generated",
+          agreement: { title: "Updated", details: "" },
+        },
+        "Saved",
+      ).ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(h.store.getSnapshot().state!.agreements.at(-1)?.title).toBe(
+      "Updated",
+    );
+    expect(
+      h.store.dispatch({ type: "delete-agreement", id: "generated" }, "Deleted")
+        .ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(h.store.getSnapshot().state!.agreements).toHaveLength(3);
+  });
+  it("rejects stale agreement changes without overwriting an externally changed household", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    const external = JSON.stringify({
+      ...createSampleHousehold(now),
+      agreements: [],
+    });
+    h.external(external);
+    expect(
+      h.store.dispatch({ type: "delete-agreement", id: "quiet" }, "Deleted").ok,
+    ).toBe(false);
+    expect(h.raw()).toBe(external);
+    expect(h.store.getSnapshot().conflict).toBe(true);
+  });
   it("persists expense settlement/reopen and restores exact balances after initialization", () => {
     const h = harness();
     h.store.initialize();

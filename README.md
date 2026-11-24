@@ -19,11 +19,13 @@ Chores support create/edit/delete, List and Board views (Board opens by default)
 
 Expenses support create/edit/delete, multiple payers, equal/percentage/fixed participant splits, exact share previews, personal balances and household transfer suggestions. Click an expense for its contribution/share breakdown and actions. Marking an expense settled confirms that the whole expense was resolved outside RoomieOS; it removes the record's effect on balances and can be undone with Reopen. The app does not transfer money. Settled records remain editable, and currency stays locked until all expense records are removed. Archived historical roles remain visible; restore those roommates before reopening an expense that involves them.
 
-Agreement editing remains for the integration milestone. Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
+Agreements support create/edit/delete with optional multiline details, keyboard-operable action buttons and confirmed deletion. The dashboard combines your pending chores and balance with household counts and a link to agreements. Add a chore or open an upcoming chore directly from the dashboard; its counts update from the same saved records used by the feature pages.
+
+Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
 
 ## Current checkpoint
 
-Milestone 4 implements expenses and the dashboard's personal balance as of 24 November 2026. Next is Milestone 5: agreements CRUD, final dashboard composition and integration feedback. See [PLAN.md](PLAN.md) for progress and actual verification results.
+Milestone 5 implements agreements and the complete dashboard as of 24 November 2026. Next is Milestone 6: final release/accessibility review, Vercel verification and course submission materials. See [PLAN.md](PLAN.md) for progress and actual verification results.
 
 ## Checks
 
@@ -35,13 +37,13 @@ npm run build
 npm run test:browser
 ```
 
-Vitest checks exact cent parsing/formatting and allocation, multiple payers, all split methods, zero-sum nets and deterministic transfers, expense CRUD/settlement/reopening, chore history/rotation, archived members, local dates, setup, roster/currency guards, payload validation and storage transactions/failures. Browser tests exercise expense and chore workflows, previews/balances, setup/persistence, profile switching, roster management, recovery, failed-save retries, confirmations, cross-tab conflicts, large households/long content, responsive overflow and dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
+Vitest checks exact cent parsing/formatting and allocation, multiple payers, all split methods, zero-sum nets and deterministic transfers, expense CRUD/settlement/reopening, chore history/rotation, agreement validation/CRUD, dashboard calculations, archived members, local dates, setup, roster/currency guards, payload validation and storage transactions/failures. Browser tests exercise chore/expense/agreement workflows, dashboard integration, previews/balances, setup/persistence, profile switching, roster management, recovery, failed-save retries, confirmations, cross-tab conflicts, large households/long content, responsive overflow and menu/dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium-browser npm run test:browser
 ```
 
-The browser suite starts its own local dev server on port 3100 with an isolated `.next-e2e/` build directory, leaving a running preview on port 3000 alone. General browser checks use UTC in both the runner and Chromium to avoid differences in their daylight-saving databases; a separate Edmonton-time check covers local-midnight overdue updates. Override the test port with `ROOMIEOS_TEST_PORT` if necessary. Screenshots and failure traces are saved under the ignored `test-results/` directory.
+The browser suite starts its own local dev server on port 3100 with an isolated `.next-e2e/` build directory, leaving a running preview on port 3000 alone. General browser checks use UTC in both the runner and Chromium to avoid differences in their daylight-saving databases; separate Edmonton-time checks cover chore/dashboard local-midnight overdue updates. Override the test port with `ROOMIEOS_TEST_PORT` if necessary. Screenshots and failure traces are saved under the ignored `test-results/` directory.
 
 ## Hydration troubleshooting
 
@@ -53,11 +55,11 @@ Keep hydration diagnostics enabled. The route browser test checks both uncaught 
 
 - `src/app`: static App Router pages and household route-group layout.
 - `src/components`: shared shell and UI primitives.
-- `src/features`: feature views; foundation views will be replaced incrementally.
-- `src/domain`: serializable types, runtime validation, household/chore/expense actions, integer money allocation/netting, date helpers and sample generation.
+- `src/features`: setup, household, chore, expense, agreement and dashboard views.
+- `src/domain`: serializable types, runtime validation, household/chore/expense/agreement actions, dashboard selectors, integer money allocation/netting, date helpers and sample generation.
 - `src/state`: household provider, hydration gate and save-before-publish storage store.
 - `src/styles`: design tokens mapped into Tailwind.
 
-`npm run build` exports static files to `out/`, suitable for Vercel. There are no backend API routes, server mutations, remote fonts or service integrations. No deployment is performed by the foundation scripts.
+`npm run build` exports static files to `out/`, suitable for Vercel. There are no backend API routes, server mutations, remote fonts or service integrations. Project scripts do not deploy automatically.
 
 Read [AGENTS.md](AGENTS.md), [PLAN.md](PLAN.md), [PRD](docs/PRD.md) and [DESIGN](docs/DESIGN.md) before implementation. PLAN tracks verified progress; PRD and DESIGN remain authoritative for behavior and UI/UX.

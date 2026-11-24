@@ -1,5 +1,5 @@
-import { FoundationDashboard } from "@/features/foundation/foundation-screen";
+import { DashboardScreen } from "@/features/dashboard/dashboard-screen";
 
 export default function DashboardPage() {
-  return <FoundationDashboard />;
+  return <DashboardScreen />;
 }

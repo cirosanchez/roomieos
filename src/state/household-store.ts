@@ -1,4 +1,8 @@
 import { ZodError } from "zod";
+import {
+  applyAgreementAction,
+  type AgreementAction,
+} from "../domain/agreements";
 import { applyChoreAction, type ChoreAction } from "../domain/chores";
 import { applyExpenseAction, type ExpenseAction } from "../domain/expenses";
 import {
@@ -140,7 +144,7 @@ export function createHouseholdStore(
   }
 
   function dispatch(
-    action: HouseholdAction | ChoreAction | ExpenseAction,
+    action: HouseholdAction | ChoreAction | ExpenseAction | AgreementAction,
     notice: string,
   ): CommandResult {
     if (snapshot.status !== "ready" || !snapshot.state)
@@ -158,7 +162,11 @@ export function createHouseholdStore(
               action.type === "delete-expense" ||
               action.type === "set-expense-status"
             ? applyExpenseAction(snapshot.state, action, makeId, now())
-            : applyHouseholdAction(snapshot.state, action, makeId),
+            : action.type === "add-agreement" ||
+                action.type === "edit-agreement" ||
+                action.type === "delete-agreement"
+              ? applyAgreementAction(snapshot.state, action, makeId)
+              : applyHouseholdAction(snapshot.state, action, makeId),
         notice,
       );
     } catch (error) {

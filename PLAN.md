@@ -2,11 +2,11 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Milestone 4 implementation and verification complete. No deployment performed.
+**Status:** Milestone 5 implementation and verification complete. No deployment performed.
 
-**Current milestone:** Milestone 4 — expenses complete.
+**Current milestone:** Milestone 5 — integration complete.
 
-**Next milestone:** Milestone 5 — agreements and dashboard integration.
+**Next milestone:** Milestone 6 — release verification and submission deliverables.
 
 **Delivery target:** Thursday, 26 November 2026; Friday, 27 November is the submission/fix buffer.
 
@@ -14,7 +14,7 @@
 
 Build a polished Next.js client-side prototype for ENTI 407. `docs/PRD.md` is authoritative for behavior; `docs/DESIGN.md` is authoritative for UI/UX. This document records approved architecture, sequencing and actual progress. It does not override those requirements.
 
-At plan approval, the repository contained documentation and a README, with no application scaffold. The foundation, household setup/persistence, chores and expenses are now implemented; see the progress record below for verification. Update this record after each working slice: check only completed work, record actual verification, and keep the current/next milestone accurate. Surface conflicts or new scope for user review rather than inventing requirements.
+At plan approval, the repository contained documentation and a README, with no application scaffold. The foundation, household setup/persistence, chores, expenses, agreements and integrated dashboard are now implemented; see the progress record below for verification. Update this record after each working slice: check only completed work, record actual verification, and keep the current/next milestone accurate. Surface conflicts or new scope for user review rather than inventing requirements.
 
 ### Resolved requirements and defaults
 
@@ -81,7 +81,7 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 | [x] | 2. Setup and persistence | Sample/empty setup, roster, profile switching, household settings, storage validation/recovery, reset/start over; refresh preserves edits | Completed Monday |
 | [x] | 3. Chores | CRUD, status/history, rotation/date confirmation, filters, List/Kanban, overdue; both views use identical state | Completed Monday |
 | [x] | 4. Expenses | Money utilities/tests first; then CRUD, multiple payers, three split modes, breakdowns, balances and settle/reopen | Completed Tuesday |
-| [ ] | 5. Integration | Agreements CRUD, derived dashboard, complete sample data, consistent empty/error states and feedback | Wednesday |
+| [x] | 5. Integration | Agreements CRUD, derived dashboard, complete sample data, consistent empty/error states and feedback | Completed Tuesday |
 | [ ] | 6. Release | Accessibility/mobile checks, production build, Vercel verification, video and real prompt transcript | Thursday |
 
 ### Milestone 1 TODOs
@@ -126,6 +126,15 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 - [x] Add confirmed whole-expense settlement, reopening, confirmed deletion, historical archived-role edits and restoration guards.
 - [x] Derive the dashboard personal balance from the same ledger; preserve browser persistence, conflict protection and failed-save drafts.
 - [x] Complete final full regression and record results/checkpoint after the test-clock correction.
+
+### Milestone 5 TODOs
+
+- [x] Add agreement create/edit/delete actions and shared title/details validation through the existing persistence transaction.
+- [x] Replace the read-only agreement preview with a document-like list, keyboard-operable action menus, forms, confirmed deletion and helpful empty state.
+- [x] Finish the dashboard with personal summary cards, sorted/date/status-labeled upcoming chores, a household snapshot, agreement link and one contextual chore-creation action.
+- [x] Reuse chore dialogs on the dashboard and derive all counts/balances from saved state; preserve complete valid sample data without replacing visitor changes.
+- [x] Verify agreement actions/storage and personal/household summary calculations with unit tests.
+- [x] Finish browser integration/mobile/keyboard/failure checks, final build and progress/checkpoint.
 
 ## 5. Dependencies, tests and risks
 
@@ -282,6 +291,25 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Try multiple payers, percentage shares totalling 100.00%, and fixed shares totalling the expense amount. Change the amount or participant selection and confirm mismatches prevent saving with a visible currency discrepancy.
 - Open a breakdown, cancel settlement, then confirm full settlement outside RoomieOS. Check balances/dashboard, refresh and reopen to restore the original nets. Currency should stay locked while settled records exist. Cancel deletion before trying a confirmed deletion.
 - On a phone, scroll through the expense form and use all payer/split controls. Try keyboard Tab/Escape through details, forms and confirmations. With two tabs open, change one and confirm an open draft in the other requires explicit reload before saving.
+
+### Integration implementation — 24 November 2026
+
+- Pushed the three completed chore/board/expense commits through `8304ab1` to origin/main as requested, then continued with Milestone 5. Existing logs and development-generated changes remain outside the checkpoint.
+- Added pure agreement create/edit/delete actions and shared validation. Agreements now use a document-like list, labeled title/details forms, explicit action-button disclosures and confirmed deletion. Blank/long invalid input saves nothing; storage failures retain drafts and prior records. Agreement content is household-wide across demo perspectives, with the same stale-tab protections as other features.
+- Completed the dashboard's three personal/household summary cards and two-column upcoming-chores/Household-at-a-glance layout. All counts/balances derive from saved records. Upcoming chores sort by due date, include Pending/Overdue labels and open the existing chore details/actions; a single Add a chore action reuses the existing form. Household counts, active roster size and an agreement link/count update immediately after changes and perspective switches. Empty households show zero facts and working calls to action.
+- Replaced the remaining foundation views with dedicated agreement/dashboard modules and removed the obsolete preview notice/copy. The existing sample remains complete and valid: five chores across all statuses, immutable completion history, four expenses covering multiple payers/all three splits/settlement, and three agreements. No additional seed writes, persisted derived fields, dependencies or storage migration were introduced.
+- Verification: `npm test` passes 122 unit/storage tests (16 new). Agreement validation/identity/order/persistence/failures and personal-versus-household dashboard calculations have coverage. Lint, typecheck, formatting and diff checks pass. The production static build passes and exports routes to `out/`.
+- Verification: the full Chromium suite passes 104 browser checks with 1 intentional desktop navigation-drawer skip at 375/768/1280 px. Twenty-one new integration checks cover agreement CRUD/inline errors/optional details, keyboard action menus/dialogs/focus restoration, failed create/edit/delete retries, cross-tab drafts, shared perspectives, long content, dashboard profile/count/balance updates, chore completion/rotation from Dashboard, empty-state creation/navigation, refresh persistence and Edmonton local-midnight overdue changes. Console/uncaught/hydration monitoring reports no errors. Reviewed desktop dashboard and phone dashboard/agreement/form screenshots.
+- Browser feedback resolved: Chromium exposed the first native-details action trigger as generic, so it now uses an explicit button disclosure with expanded state, outside-click/blur/Escape dismissal and focus restoration. Setup-retry tests now navigate through the actual sidebar/mobile menu after removal of the old foundation Settings notice. The final full regression passes after both corrections.
+- Limits: Chromium verification only; no Vercel deployment or course video/transcript export performed. Manual release review and submission deliverables remain in Milestone 6. Existing `docs/logs/` and generated `next-env.d.ts` changes remain outside the milestone commit.
+- Next slice: Milestone 6 — final accessibility/mobile review, deployed deep-link/private-window verification and authentic submission materials.
+
+### Manual review after Milestone 5
+
+- Add an agreement from the empty state; try a blank title, multiline details, edit/cancel and delete/cancel/confirm. Refresh the route and verify saved text remains. Use keyboard Tab/Enter/Escape through its action menu and dialogs.
+- On Dashboard, switch perspectives and compare personal chores/balances with household counts. Open an upcoming chore, complete/reopen or rotate it, then refresh and check both Dashboard and Board agree. Add a new chore directly from Dashboard.
+- From an empty household, verify zero counts and helpful actions; follow the agreements link, create an agreement and check its dashboard link/count updates. Review 375/768/1280 px layouts and the mobile menu.
+- Use Settings for household renaming, reset/start-over confirmations and roster management; the remaining release pass should check every visible control plus the deployed deep links and authentic course deliverables.
 
 ### Release deliverables
 

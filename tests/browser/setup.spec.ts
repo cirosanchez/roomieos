@@ -444,9 +444,16 @@ test("failed writes keep setup and settings drafts available for retry", async (
     "Cedar House",
   );
   // Use client navigation so the initial failure injection is not reinstalled on reload.
+  if (page.viewportSize()!.width < 1024)
+    await page
+      .getByRole("button", { name: "Open navigation", exact: true })
+      .click();
   await page
-    .getByRole("link", { name: "Manage your household in Settings." })
+    .getByRole("navigation", { name: "Main navigation", exact: true })
+    .filter({ visible: true })
+    .getByRole("link", { name: "Settings", exact: true })
     .click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Settings");
   const before = await saved(page);
   await page.evaluate(() => {
     const original = Storage.prototype.setItem;

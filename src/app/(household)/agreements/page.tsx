@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { FoundationScreen } from "@/features/foundation/foundation-screen";
+import { AgreementsScreen } from "@/features/agreements/agreements-screen";
 
 export const metadata: Metadata = { title: "Agreements" };
 export default function AgreementsPage() {
-  return <FoundationScreen section="agreements" />;
+  return <AgreementsScreen />;
 }
