@@ -2,6 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { Plus, Settings } from "lucide-react";
+import { ChoreDetails } from "@/features/chores/chore-details";
+import { useToday } from "@/state/use-today";
+import { StatusPill } from "@/components/ui/status-pill";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
 import { Dialog, ConfirmDialog } from "@/components/ui/dialog";
@@ -154,6 +157,24 @@ function MemberEditor({
 
 export function SettingsScreen() {
   const { state, store, conflict } = useReadyHousehold();
+  const today = useToday();
+  const [historyMemberId, setHistoryMemberId] = useState<string | null>(null);
+  const [historyChoreId, setHistoryChoreId] = useState<string | null>(null);
+  const historyMember = state.members.find(
+    (member) => member.id === historyMemberId,
+  );
+  const historyChore = state.chores.find(
+    (chore) => chore.id === historyChoreId,
+  );
+  const closeHistoryChore = () => {
+    setHistoryChoreId(null);
+    requestAnimationFrame(() =>
+      (
+        document.getElementById(`history-chore-${historyChoreId}`) ??
+        document.getElementById("archived-chore-history")
+      )?.focus(),
+    );
+  };
   const [editor, setEditor] = useState<Member | "new" | null>(null);
   const [confirmation, setConfirmation] = useState<
     "reset" | "clear" | Member | null
@@ -221,7 +242,22 @@ export function SettingsScreen() {
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
+          {!member.active &&
+            state.chores.some((chore) => chore.assigneeId === member.id) && (
+              <Button
+                id={`history-open-${member.id}`}
+                variant="ghost"
+                aria-label={`Chore history for ${member.name}`}
+                onClick={() => {
+                  store.dismissFeedback();
+                  setHistoryMemberId(member.id);
+                }}
+              >
+                Chore history
+              </Button>
+            )}
           <Button
+            id={`member-edit-${member.id}`}
             variant="ghost"
             onClick={() => {
               store.dismissFeedback();
@@ -266,6 +302,57 @@ export function SettingsScreen() {
         : "Remove this roommate from active selections. Historical records and roster order will be kept, and the roommate can be restored later.";
   return (
     <>
+      {historyMember && (
+        <Dialog
+          open
+          id="archived-chore-history"
+          returnFocusId={
+            state.chores.some((chore) => chore.assigneeId === historyMember.id)
+              ? `history-open-${historyMember.id}`
+              : `member-edit-${historyMember.id}`
+          }
+          title={`Chore history for ${historyMember.name}`}
+          onClose={() => setHistoryMemberId(null)}
+          description="Saved chore records for this archived roommate."
+        >
+          <ul className="space-y-3">
+            {state.chores
+              .filter((chore) => chore.assigneeId === historyMember.id)
+              .map((chore) => (
+                <li
+                  key={chore.id}
+                  className="flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-line pb-3"
+                >
+                  <Button
+                    variant="ghost"
+                    className="h-auto min-w-0 whitespace-normal text-left [overflow-wrap:anywhere]"
+                    id={`history-chore-${chore.id}`}
+                    onClick={() => setHistoryChoreId(chore.id)}
+                  >
+                    {chore.title}
+                  </Button>
+                  <StatusPill status={chore.status} />
+                </li>
+              ))}
+          </ul>
+          {!state.chores.some(
+            (chore) => chore.assigneeId === historyMember.id,
+          ) && (
+            <p className="text-sm text-muted">
+              No remaining chore records for this roommate.
+            </p>
+          )}
+        </Dialog>
+      )}
+      {historyChore && (
+        <ChoreDetails
+          key={historyChore.id}
+          chore={historyChore}
+          today={today}
+          onClose={closeHistoryChore}
+          onDeleted={closeHistoryChore}
+        />
+      )}
       <PageHeader
         title="Settings"
         description="The details that make a household yours."

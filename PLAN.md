@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Sidebar polish implemented and verified following component review. No deployment performed.
+**Status:** Selected-roommate chore boards and filter removal implemented and verified. No deployment performed.
 
-**Current milestone:** Component review — sidebar polish complete.
+**Current milestone:** Component review — selected-roommate boards complete.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -355,3 +355,12 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Verification: 122 unit/storage tests pass; lint, typecheck, source/test/config formatting, diff checks and production static build pass. Shell/navigation/setup Chromium suites pass 44 checks with one intentional desktop mobile-drawer skip. After final 80px header alignment, the closing shell/navigation regression passes all 14 applicable checks with that same skip.
 - Checks at 375/768/1280px cover control placement/containment, collapsed links/tooltips, Settings from the rail, a 600px-height footer, mobile explicit close/route dismissal/focus, all routes/reloads, perspective switching and household/storage flows. Expanded/collapsed/mobile screenshots were reviewed after settling animations; previews are saved under `/tmp/roomieos-sidebar-review/`.
 - Manual review: collapse/expand from within the sidebar, navigate while collapsed, open/close mobile navigation, and inspect footer tools in a shorter window. Collapse state stays temporary, and no household facts/schema/storage keys changed. Chromium only; no deployment performed.
+
+### Selected-roommate chore boards — 24 November 2026
+
+- User explicitly removed status/roommate filters and requested that Kanban follow the currently selected demo roommate. Derive cards/count from selectedMemberId across all three statuses; perspective changes update immediately and persist through the existing profile action. No per-view filter state or new storage fields.
+- Keep a helpful personal empty state and New chore defaulting to the selected roommate. Reassignment/rotation may move a card off the current board; retain its open details until closed and restore focus to New chore when its trigger disappears. Cancel transient drag state on perspective changes.
+- Preserve historical archived-member access through a Chore history action on archived roster entries in Settings, reusing the existing detail/edit/rotation dialogs and guards. Active roommates' records remain reachable by switching perspective; no all-household filter added back.
+- Verification: 122 unit/storage tests pass, along with lint, typecheck, source/test formatting, diff checks and the production static build. The broader chore/drag/integration/setup run passed 90 checks and exposed one phone long-name overflow; after adding wrapping, the closing chore/drag/integration regression passes all 61 checks, with two intentional skips for phone-only real touch coverage.
+- Checks at 375/768/1280px cover removal of both filters, profile isolation/switch/refresh without modifying shared chores, 40-character-name personal empty states, selected-profile form defaults, preserved completion history through reassignment/rotation, archived history editing/guards, all-status tags, pointer/touch/keyboard moves and gesture cancellation on perspective changes. Existing setup/roster/storage flows also passed in the broader run.
+- Reviewed the personal desktop board screenshot; previews for desktop/tablet/phone are saved under `/tmp/roomieos-personal-board-review/`. Manual review: switch demo perspectives, refresh, add a chore and confirm the default assignee; reassign/rotate a chore and check that it appears on the new assignee's board. Archived roster entries with chores expose Chore history in Settings. Chromium only; no deployment performed.

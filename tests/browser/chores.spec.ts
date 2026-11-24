@@ -58,7 +58,7 @@ test("board chores CRUD, history and rotation persist", async ({
   ).toBeVisible();
   expect(await saved(page)).toEqual(initial);
   await form.getByLabel("Title", { exact: false }).fill("Clean the oven");
-  await selectControl(form.getByLabel("Assigned to"), "jordan");
+  await expectControlValue(form.getByLabel("Assigned to"), "avery");
   await form.getByLabel("Due date").fill(localDate(new Date()));
   await form
     .getByLabel("Notes")
@@ -79,6 +79,23 @@ test("board chores CRUD, history and rotation persist", async ({
       .getByRole("region", { name: "Completed chores", exact: true })
       .getByRole("button", { name: "Clean the oven", exact: true }),
   ).toBeVisible();
+  await titleButton(page, "Clean the oven").click();
+  await details
+    .getByRole("button", { name: "Edit chore", exact: true })
+    .click();
+  await selectControl(
+    getDialog(page, { name: "Edit chore", exact: true }).getByLabel(
+      "Assigned to",
+    ),
+    "sam",
+  );
+  await getDialog(page, { name: "Edit chore", exact: true })
+    .getByRole("button", { name: "Save chore", exact: true })
+    .click();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByText("No chores assigned to Avery", { exact: true }),
+  ).toBeVisible();
   await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await titleButton(page, "Clean the oven").click();
   await details.getByRole("button", { name: "Reopen as pending" }).click();
@@ -95,7 +112,7 @@ test("board chores CRUD, history and rotation persist", async ({
     name: "Rotate chore",
     exact: true,
   });
-  await expect(rotate.getByText("Next roommate:")).toContainText("Sam");
+  await expect(rotate.getByText("Next roommate:")).toContainText("Avery");
   await expectControlValue(
     rotate.getByLabel("New due date"),
     suggestedRotationDate(localDate(new Date()), localDate(new Date())),
@@ -114,7 +131,7 @@ test("board chores CRUD, history and rotation persist", async ({
   await rotate.getByRole("button", { name: "Confirm rotation" }).click();
   await expect(rotate).not.toBeVisible();
   expect((await saved(page)).chores[0]).toMatchObject({
-    assigneeId: "sam",
+    assigneeId: "avery",
     status: "pending",
     completionHistory: beforeRotation.chores[0].completionHistory,
   });
@@ -132,6 +149,7 @@ test("board chores CRUD, history and rotation persist", async ({
     updated.getByText("Use the soft cloth.\nLeave the door open."),
   ).toBeVisible();
   await page.keyboard.press("Escape");
+  await selectControl(page.getByLabel("Switch demo perspective"), "avery");
   await page.reload();
   await titleButton(page, "Clean oven and trays").click();
   await expect(
@@ -171,72 +189,61 @@ test("board chores CRUD, history and rotation persist", async ({
   expect(diagnostics).toEqual([]);
 });
 
-test("board filters, status tags and detail actions persist and fit the viewport", async ({
+test("board follows the selected perspective without filters, persists and handles empty assignments", async ({
   page,
 }, testInfo) => {
-  await seed(page);
+  const state = createSampleHousehold(new Date());
+  state.chores = state.chores.filter((chore) => chore.assigneeId !== "sam");
+  state.members[2].name = "S".repeat(40);
+  await seed(page, state);
+  const original = (await saved(page)).chores;
+  await expect(page.getByLabel("Filter by status")).toHaveCount(0);
+  await expect(page.getByLabel("Filter by roommate")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "List", exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Board", exact: true }),
-  ).toHaveCount(0);
-  await expect(
-    page
-      .getByRole("region", { name: "Chore board", exact: true })
-      .getByRole("combobox"),
-  ).toHaveCount(0);
-  await expect(
-    page.getByRole("region", { name: "Chore board", exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText("Overdue", { exact: true }).filter({ visible: true }),
-  ).toHaveCount(1);
-  await selectControl(page.getByLabel("Filter by roommate"), "jordan");
-  await expect(titleButton(page, "Take out recycling")).toBeVisible();
-  await expect(
-    page.getByText("Overdue", { exact: true }).filter({ visible: true }),
-  ).toHaveCount(0);
-  await selectControl(page.getByLabel("Filter by status"), "completed");
-  await expect(page.getByText("No matching chores")).toBeVisible();
-  await page
-    .getByRole("button", { name: "Clear filters", exact: true })
-    .click();
-  await page.screenshot({
-    path: testInfo.outputPath("chore-board-filtered.png"),
-    fullPage: true,
-  });
+  await expect(titleButton(page, "Clean the kitchen")).toBeVisible();
+  await expect(titleButton(page, "Vacuum the living room")).toBeVisible();
+  await expect(titleButton(page, "Take out recycling")).toHaveCount(0);
   const board = page.getByRole("region", { name: "Chore board", exact: true });
   await expect(board.getByRole("heading", { level: 2 })).toHaveCount(3);
   await noOverflow(page);
   await page.screenshot({
-    path: testInfo.outputPath("chore-board.png"),
+    path: testInfo.outputPath("personal-board.png"),
     fullPage: true,
   });
   if (page.viewportSize()!.width < 1024) {
-    expect(
-      await board.evaluate(
-        (element) => element.scrollWidth > element.clientWidth,
-      ),
-    ).toBe(true);
     await board.focus();
     await page.keyboard.press("ArrowRight");
     await expect
-      .poll(() => board.evaluate((element) => element.scrollLeft))
+      .poll(() => board.evaluate((el) => el.scrollLeft))
       .toBeGreaterThan(0);
   }
-  await changeChoreStatus(page, "Clean the kitchen", "skipped");
+  await selectControl(page.getByLabel("Switch demo perspective"), "jordan");
+  await expect(titleButton(page, "Take out recycling")).toBeVisible();
+  await expect(titleButton(page, "Clean the kitchen")).toHaveCount(0);
+  expect((await saved(page)).chores).toEqual(original);
+  await page.reload();
+  await expect(titleButton(page, "Take out recycling")).toBeVisible();
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(
-    page
-      .getByRole("region", { name: "Skipped chores", exact: true })
-      .getByRole("button", { name: "Clean the kitchen", exact: true }),
+    page.getByText(`No chores assigned to ${state.members[2].name}`, {
+      exact: true,
+    }),
   ).toBeVisible();
-  await expect(page.getByText("Overdue", { exact: true })).toHaveCount(0);
+  await noOverflow(page);
+  await page.getByRole("button", { name: "Add a chore", exact: true }).click();
+  await expectControlValue(
+    getDialog(page, { name: "New chore", exact: true }).getByLabel(
+      "Assigned to",
+    ),
+    "sam",
+  );
+  await page.keyboard.press("Escape");
+  await selectControl(page.getByLabel("Switch demo perspective"), "avery");
+  await changeChoreStatus(page, "Clean the kitchen", "skipped");
   await expectChoreStatus(page, "Clean the kitchen", "skipped");
   await page.reload();
-  await expect(
-    page.getByRole("region", { name: "Chore board", exact: true }),
-  ).toBeVisible();
   await expectChoreStatus(page, "Clean the kitchen", "skipped");
   await noOverflow(page);
 });
@@ -259,6 +266,11 @@ test("historical archived assignments remain editable and rotate through a large
     })),
   );
   await seed(page, state);
+  await expect(titleButton(page, "Vacuum the living room")).toHaveCount(0);
+  await page.goto("/settings/");
+  await page
+    .getByRole("button", { name: "Chore history for Avery", exact: true })
+    .click();
   await titleButton(page, "Vacuum the living room").click();
   const details = getDialog(page, {
     name: "Vacuum the living room",
@@ -290,6 +302,8 @@ test("historical archived assignments remain editable and rotate through a large
     details.getByRole("region", { name: "Completion history" }),
   ).toContainText("Avery (archived)");
   await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await page.goto("/chores/");
   await page.getByRole("button", { name: "New chore", exact: true }).click();
   const form = getDialog(page, { name: "New chore", exact: true });
   await expect(await selectItems(form.getByLabel("Assigned to"))).toHaveCount(
@@ -459,7 +473,10 @@ test.describe("local calendar", () => {
     );
     await page.clock.install({ time });
     // Seed the same calendar day in the runner's zone; the simulated clock uses the browser's zone.
-    await seed(page, createSampleHousehold(new Date(2026, 10, 23, 12)));
+    const state = createSampleHousehold(new Date(2026, 10, 23, 12));
+    state.chores.find((chore) => chore.id === "recycling")!.assigneeId =
+      "avery";
+    await seed(page, state);
     await expect(
       page.getByText("Overdue", { exact: true }).filter({ visible: true }),
     ).toHaveCount(1);

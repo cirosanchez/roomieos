@@ -149,13 +149,15 @@ Keep numbers defensible and labels precise: outstanding expense total is differe
 
 Header: `Chores` / short description / right-aligned `+ New chore` button.
 
-Below: compact status/roommate filters. Chores is board-only, with no List/Board switcher (user-approved 24 November 2026).
+Chores is board-only, with no List/Board switcher or status/roommate filters (user-approved 24 November 2026). Show only chores assigned to the selected demo roommate, across all three statuses; update the count/cards immediately when perspective changes. Show a personal empty state when no chores are assigned, with a working Add a chore action.
 
 **Card status:** show a non-interactive colored tag with icon/text; no per-card status dropdown. Click a title for detail actions, or use the card drag handle.
 
 **Kanban board:** exactly three columns with compact headers and counts: `Pending`, `Completed`, `Skipped`. Cards show title, assignee avatar, due date, optional one-line notes. Click opens details; status action reachable without drag/drop. Approved UI-review enhancement (24 November 2026): cards can be dragged between columns using a handle or a non-interactive card surface with a mouse; touch uses the handle so the rest of the board remains scrollable. Highlight the destination column, support keyboard pickup/arrows/drop/Escape, and retain functional status actions inside the detail dialog. Keep ordering within a column unchanged.
 
 **Create/edit modal or drawer fields:** Title (required), Assignee (active member picker), Due date (native date control), Notes (multiline, optional). Clearly label `Save` and `Cancel`. Form errors are inline.
+
+Archived roommates’ chore history remains reachable from their roster entry in Settings, using the same detail/edit/rotation dialogs and safeguards.
 
 **Details:** primary status action, `Rotate to next`, edit, delete. History panel shows `Completed by Avery • 22 Nov` in reverse chronological order. Rotation asks for the next due date and names the next assignee before confirmation.
 

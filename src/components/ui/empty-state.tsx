@@ -19,7 +19,9 @@ export function EmptyState({
       >
         {icon}
       </div>
-      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <h2 className="max-w-full break-words text-lg font-semibold tracking-tight">
+        {title}
+      </h2>
       <div className="mt-2 max-w-md text-sm leading-relaxed text-muted">
         {children}
       </div>

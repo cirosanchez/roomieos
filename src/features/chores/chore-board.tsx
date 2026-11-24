@@ -59,17 +59,17 @@ export function ChoreBoard({
       const handle = document.getElementById(`drag-${id}`);
       if (handle) handle.focus({ preventScroll: true });
       else
-        (
-          board.current ?? document.getElementById("chore-status-filter")
-        )?.focus({ preventScroll: true });
+        (board.current ?? document.getElementById("new-chore"))?.focus({
+          preventScroll: true,
+        });
     });
   }
-  function cancel() {
+  function cancel(restoreFocus = true) {
     const id = dragRef.current?.id;
     pointer.current = null;
     update(null);
     setAnnouncement("Move cancelled.");
-    if (id) focusHandle(id);
+    if (id && restoreFocus) focusHandle(id);
   }
   function finish() {
     const current = dragRef.current;
@@ -345,7 +345,7 @@ export function ChoreBoard({
                               dragRef.current?.mode === "keyboard" &&
                               dragRef.current.id === chore.id
                             )
-                              cancel();
+                              cancel(false);
                           }}
                           className="touch-none cursor-grab text-muted active:cursor-grabbing"
                         >

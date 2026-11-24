@@ -145,22 +145,22 @@ test("failed saves leave the card in place and retry creates one completion", as
     .toBe(1);
 });
 
-test("archived assignments cannot be dragged back to Pending", async ({
+test("archived assignments stay outside active roommates' boards", async ({
   page,
 }) => {
   const state = createSampleHousehold(new Date());
   state.members[0].active = false;
   state.selectedMemberId = "jordan";
   state.expenses = [];
-  for (const c of state.chores)
-    if (c.assigneeId === "avery") c.status = "skipped";
+  for (const chore of state.chores)
+    if (chore.assigneeId === "avery") chore.status = "skipped";
   await seed(page, state);
   const before = await saved(page);
-  await mouseMove(page, "pending");
-  expect(await saved(page)).toEqual(before);
+  await expect(handle(page)).toHaveCount(0);
   await expect(
-    page.getByText(/Reassign this chore to an active roommate/).first(),
+    page.getByRole("button", { name: "Take out recycling", exact: true }),
   ).toBeVisible();
+  expect(await saved(page)).toEqual(before);
 });
 
 test("touch dragging scrolls the board and drops in another column", async ({
@@ -238,20 +238,24 @@ test("dropping outside the board leaves the saved household unchanged", async ({
   await expect(handle(page)).toHaveAttribute("aria-pressed", "false");
 });
 
-test("a keyboard drop hidden by the active filter returns focus to that filter", async ({
+test("switching perspective cancels a pending keyboard move and preserves all chore records", async ({
   page,
 }) => {
   const state = createSampleHousehold(new Date());
   state.chores = [state.chores[0]];
   await seed(page, state);
-  await selectControl(page.getByLabel("Filter by status"), "pending");
-  await handle(page).focus();
-  await page.keyboard.press("Space");
+  await handle(page).press("Space");
   await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("Enter");
+  await selectControl(page.getByLabel("Switch demo perspective"), "sam");
   await expect(
-    page.getByText("No matching chores", { exact: true }),
+    page.getByText("No chores assigned to Sam", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByLabel("Filter by status")).toBeFocused();
-  expect((await saved(page)).chores[0].status).toBe("completed");
+  expect((await saved(page)).chores).toEqual(state.chores);
+  await page.reload();
+  await expect(
+    page.getByText("No chores assigned to Sam", { exact: true }),
+  ).toBeVisible();
+  await selectControl(page.getByLabel("Switch demo perspective"), "avery");
+  await expectChoreStatus(page, "Clean the kitchen", "pending");
+  await expect(handle(page)).toHaveAttribute("aria-pressed", "false");
 });
