@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
   poweredByHeader: false,
+  // Keep development tools clear of the sidebar footer.
+  devIndicators: { position: "bottom-right" },
   reactStrictMode: true,
 };
 

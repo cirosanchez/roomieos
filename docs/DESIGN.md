@@ -83,7 +83,7 @@ Use these as CSS custom properties in `src/styles/tokens.css` (or equivalent Tai
 
 - **Spacing unit:** 4 px. Preferred gaps: 8, 12, 16, 20, 24, 32, 40 px.
 - **Sidebar:** 248 px expanded on desktop, collapsible to a 64 px icon rail; subtle right border. Collapse state is temporary. Below 1024 px, use a modal slide-over menu.
-- **Top bar:** ~56 px high; breadcrumb/location on left, active roommate switcher on right.
+- **Top bar:** 80 px high, aligned with the expanded sidebar header; breadcrumb/location on left, active roommate switcher on right.
 - **Main max width:** 1120 px with 40 px horizontal interior padding desktop, 20 px tablet, 16 px phone.
 - **Card radius:** 10 px; **controls radius:** 7 px; **modal radius:** 12 px.
 - **Buttons:** min height 36 px desktop; tap targets >=44 px on touch layouts.
@@ -112,7 +112,7 @@ Use these as CSS custom properties in `src/styles/tokens.css` (or equivalent Tai
 └────────────────────┴──────────────────────────────────────────────────────────┘
 ```
 
-Sidebar content order: logo, household label if useful, Dashboard, Chores, Expenses, Agreements; Settings anchored near bottom. Active page has a pale blue tint and a narrow left accent or colored text (not both aggressively). Use Lucide icons for navigation.
+Sidebar content order: brand and collapse control in an aligned header, read-only household context, Workspace links (Dashboard, Chores, Expenses, Agreements), then Settings/About utilities and a compact local-only note in the footer. The collapsed rail keeps its own expand control and centered icons with tooltips; do not place desktop collapse/expand controls in the content header. Mobile uses a menu trigger in the content header and a close control in the Sheet header. Active page has a pale blue tint and a narrow left accent or colored text (not both aggressively). Use Lucide icons for navigation.
 
 Profile switcher lives in the top bar: avatar + name + chevron. Dropdown lists all **active** roommates and includes a small explanation `Switch demo perspective`. It must never look like secure sign-in.
 

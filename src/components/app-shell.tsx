@@ -9,7 +9,10 @@ import {
   House,
   Info,
   LayoutDashboard,
-  PanelLeft,
+  PanelLeftOpen,
+  PanelLeftClose,
+  Menu,
+  X,
   Settings,
   ShieldCheck,
   Wallet,
@@ -41,35 +44,36 @@ const navigation = [
   { href: "/settings", label: "Settings", Icon: Settings },
 ];
 
-function Navigation({ onNavigate }: { onNavigate?: () => void }) {
+function Navigation({
+  onNavigate,
+  items = navigation.filter((item) => item.href !== "/settings"),
+}: {
+  onNavigate?: () => void;
+  items?: typeof navigation;
+}) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main navigation">
-      <SidebarMenu>
-        {navigation.map(({ href, label, Icon }) => {
-          const active = pathname === href || pathname === `${href}/`;
-          return (
-            <SidebarMenuItem
-              key={href}
-              className={href === "/settings" ? "mt-6" : ""}
+    <SidebarMenu className="gap-1 group-data-[collapsible=icon]:items-center">
+      {items.map(({ href, label, Icon }) => {
+        const active = pathname === href || pathname === `${href}/`;
+        return (
+          <SidebarMenuItem key={href}>
+            <SidebarMenuButton
+              render={<Link href={href} />}
+              isActive={active}
+              tooltip={label}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+              onClick={onNavigate}
+              className="min-h-11 gap-3 rounded-lg px-3 text-muted hover:bg-hover hover:text-ink data-active:bg-selected data-active:text-accent group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span]:hidden [&_svg]:size-[18px]"
             >
-              <SidebarMenuButton
-                render={<Link href={href} />}
-                isActive={active}
-                tooltip={label}
-                aria-label={label}
-                aria-current={active ? "page" : undefined}
-                onClick={onNavigate}
-                className="min-h-11 gap-3"
-              >
-                <Icon aria-hidden="true" />
-                <span>{label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-    </nav>
+              <Icon aria-hidden="true" />
+              <span>{label}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        );
+      })}
+    </SidebarMenu>
   );
 }
 
@@ -91,6 +95,7 @@ function ShellContent({ children }: { children: ReactNode }) {
       (item) => item.href === pathname || `${item.href}/` === pathname,
     )?.label ?? "RoomieOS";
   const drawerOpen = openMobile;
+  const collapsed = !open && !isMobile;
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1024px)");
@@ -106,7 +111,6 @@ function ShellContent({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {" "}
       <a
         href="#main-content"
         className="fixed top-3 left-3 z-50 -translate-y-24 rounded-[7px] bg-accent px-4 py-3 text-sm font-medium text-white focus:translate-y-0"
@@ -114,85 +118,135 @@ function ShellContent({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <Sidebar collapsible="icon" aria-label="Sidebar">
-        <SidebarHeader className="px-3 py-5">
+        <SidebarHeader
+          className={`shrink-0 border-b border-line ${collapsed ? "items-center gap-1 px-2 py-3" : "h-20 flex-row items-center justify-between gap-1 px-3 py-2"}`}
+        >
           <Link
             href="/"
             aria-label="RoomieOS dashboard"
-            className="mb-5 inline-flex self-start"
+            onClick={() => setOpenMobile(false)}
+            className={`inline-flex min-h-11 min-w-0 items-center rounded-lg ${collapsed ? "w-11 justify-center" : "pl-1"}`}
           >
-            <Wordmark iconOnly={!open && !isMobile} />
+            <Wordmark iconOnly={collapsed} />
           </Link>
-          <p className="px-1 text-xs font-medium text-muted group-data-[collapsible=icon]:hidden">
-            <span className="block truncate" title={state.household.name}>
-              {state.household.name}
-            </span>
-          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={
+              isMobile
+                ? "Close navigation"
+                : collapsed
+                  ? "Expand sidebar"
+                  : "Collapse sidebar"
+            }
+            aria-expanded={isMobile ? openMobile : open}
+            aria-controls={
+              isMobile ? "mobile-navigation" : "desktop-navigation"
+            }
+            onClick={() => (isMobile ? setOpenMobile(false) : setOpen(!open))}
+            className="text-muted hover:bg-hover hover:text-ink"
+            title={
+              isMobile
+                ? "Close navigation"
+                : collapsed
+                  ? "Expand sidebar"
+                  : "Collapse sidebar"
+            }
+          >
+            {isMobile ? (
+              <X aria-hidden="true" className="size-[18px]" />
+            ) : collapsed ? (
+              <PanelLeftOpen aria-hidden="true" className="size-[18px]" />
+            ) : (
+              <PanelLeftClose aria-hidden="true" className="size-[18px]" />
+            )}
+          </Button>
         </SidebarHeader>
-        <SidebarContent className="px-3">
-          <Navigation onNavigate={() => setOpenMobile(false)} />
-        </SidebarContent>
-        <SidebarFooter className="space-y-3 px-3 pb-5">
-          <div className="flex items-start gap-2.5 text-sm text-muted group-data-[collapsible=icon]:hidden">
-            <ShieldCheck
-              aria-hidden="true"
-              className="mt-0.5 size-4 shrink-0"
-            />
-            <div>
-              <p className="font-medium text-ink">Local prototype</p>
-              <p className="mt-1 text-xs leading-relaxed">
-                Saved on this browser only.
+        {!collapsed && (
+          <div className="mx-3 my-4 flex min-w-0 items-center gap-2.5 rounded-lg border border-line bg-page px-3 py-2.5">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-subtle text-muted">
+              <House aria-hidden="true" className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[11px] leading-4 text-muted">Household</p>
+              <p
+                className="truncate text-sm font-medium text-ink"
+                title={state.household.name}
+              >
+                {state.household.name}
               </p>
             </div>
           </div>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="About this prototype"
-                aria-label="About this prototype"
-                onClick={() => {
-                  setOpenMobile(false);
-                  setAboutOpen(true);
-                }}
-                className="min-h-11"
-              >
-                <Info aria-hidden="true" />
-                <span>About this prototype</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          <Button
-            variant="ghost"
-            className="lg:hidden"
-            onClick={() => setOpenMobile(false)}
+        )}
+        <nav
+          id="desktop-navigation"
+          aria-label="Main navigation"
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <SidebarContent
+            className={`gap-0 px-2 ${collapsed ? "pt-2" : "pt-1"}`}
           >
-            Close navigation
-          </Button>
-        </SidebarFooter>
+            <p className="mb-2 px-3 text-xs font-medium text-muted group-data-[collapsible=icon]:hidden">
+              Workspace
+            </p>
+            <Navigation onNavigate={() => setOpenMobile(false)} />
+          </SidebarContent>
+          <SidebarFooter className="mt-auto gap-1 border-t border-line px-2 py-3">
+            <Navigation
+              items={navigation.filter((item) => item.href === "/settings")}
+              onNavigate={() => setOpenMobile(false)}
+            />
+            <SidebarMenu className="group-data-[collapsible=icon]:items-center">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  id="about-prototype"
+                  tooltip="About this prototype"
+                  aria-label="About this prototype"
+                  onClick={() => {
+                    setOpenMobile(false);
+                    setAboutOpen(true);
+                  }}
+                  className="min-h-11 gap-3 rounded-lg px-3 text-muted hover:bg-hover hover:text-ink group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span]:hidden [&_svg]:size-[18px]"
+                >
+                  <Info aria-hidden="true" />
+                  <span>About RoomieOS</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            <div
+              role="note"
+              aria-label="Local prototype. Saved on this browser only."
+              title="Local prototype. Saved on this browser only."
+              className="mt-2 flex min-h-11 items-center gap-3 border-t border-line px-3 pt-3 text-muted group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+            >
+              <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
+              <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+                <p className="text-xs font-medium">Local prototype</p>
+                <p className="mt-0.5 text-[11px]">Saved on this browser only</p>
+              </div>
+            </div>
+          </SidebarFooter>
+        </nav>
       </Sidebar>
       <div className="min-w-0 flex-1">
-        <header className="flex min-h-14 items-center justify-between gap-3 border-b border-line px-4 sm:px-5 lg:px-10">
+        <header className="flex min-h-20 items-center justify-between gap-3 border-b border-line px-4 sm:px-5 lg:px-10">
           <div className="flex min-w-0 items-center gap-3">
             <Button
+              id="mobile-nav-toggle"
               variant="ghost"
               size="icon"
-              aria-label={
-                isMobile
-                  ? "Open navigation"
-                  : open
-                    ? "Collapse sidebar"
-                    : "Expand sidebar"
-              }
-              aria-expanded={isMobile ? drawerOpen : open}
-              aria-controls={isMobile ? "mobile-navigation" : undefined}
-              onClick={() => (isMobile ? setOpenMobile(true) : setOpen(!open))}
+              className="lg:hidden"
+              aria-label="Open navigation"
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-navigation"
+              onClick={() => setOpenMobile(true)}
             >
-              <PanelLeft aria-hidden="true" className="size-5" />
+              <Menu aria-hidden="true" className="size-5" />
             </Button>
             <div className="lg:hidden">
               <Wordmark compact />
             </div>
             <div className="hidden min-w-0 items-center gap-2 text-sm text-muted lg:flex">
-              <House aria-hidden="true" className="size-4 shrink-0" />
               <span className="max-w-48 truncate" title={state.household.name}>
                 {state.household.name}
               </span>
@@ -237,6 +291,7 @@ function ShellContent({ children }: { children: ReactNode }) {
           open={aboutOpen}
           onClose={() => setAboutOpen(false)}
           title="About RoomieOS"
+          returnFocusId={isMobile ? "mobile-nav-toggle" : "about-prototype"}
           description="Your shared home, organized."
         >
           <div className="space-y-4 text-sm text-muted">

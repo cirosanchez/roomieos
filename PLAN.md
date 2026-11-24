@@ -2,9 +2,9 @@
 
 **Last updated:** 24 November 2026
 
-**Status:** Board-only chores and status tags implemented and verified. No deployment performed.
+**Status:** Sidebar polish implemented and verified following component review. No deployment performed.
 
-**Current milestone:** Component review — board-only chores and status tags complete.
+**Current milestone:** Component review — sidebar polish complete.
 
 **Next milestone:** Milestone 6 — release verification and submission deliverables.
 
@@ -345,3 +345,13 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Removed view state/switcher/list rendering and the board status-control callback. No domain/store/schema changes. Browser checks now exercise detail actions and status tags, and assert that the List switcher and card dropdowns are absent.
 - Verification: 122 unit/storage tests and 61 Chromium chore/drag/integration checks pass at 375/768/1280 px, with two intentional skips for phone-only real touch coverage. Lint, typecheck, formatting, diff checks and the production static build pass. Detail status actions, tags, drag completion history, touch/keyboard moves, failed saves, cross-tab protection, archived assignments, filters and refresh persistence remain covered.
 - Reviewed the desktop status-tag layout; screenshots for desktop/tablet/phone are saved under `/tmp/roomieos-board-only-review/`. Manual review: open Chores and confirm the switcher/card dropdowns are gone, move a card and check its tag, then open details to change status and refresh. Chromium only; no deployment performed.
+
+### Sidebar polish — 24 November 2026
+
+- User requested a more polished sidebar informed by Vercel's dashboard navigation and explicitly rejected the detached collapse/expand control. Put the desktop control in the sidebar header, including a visible expand control within the collapsed rail; the content header retains only the mobile menu trigger.
+- Align the brand/header, introduce read-only household context, organize primary links under Workspace and Settings/About as footer utilities, tighten icon alignment and footer disclosure, retain RoomieOS colors and all five routes. No fake workspace selector, resizing feature or additional navigation introduced. Temporary collapse and 1024px mobile Sheet behavior remain.
+- Move the Next.js development indicator to bottom-right so it does not obscure sidebar footer controls. Use the installed Next.js devIndicators guide; keep development diagnostics available.
+- Reference: https://vercel.com/changelog/dashboard-navigation-redesign-rollout (official screenshot inspected); use its navigation hierarchy and restrained styling as inspiration.
+- Verification: 122 unit/storage tests pass; lint, typecheck, source/test/config formatting, diff checks and production static build pass. Shell/navigation/setup Chromium suites pass 44 checks with one intentional desktop mobile-drawer skip. After final 80px header alignment, the closing shell/navigation regression passes all 14 applicable checks with that same skip.
+- Checks at 375/768/1280px cover control placement/containment, collapsed links/tooltips, Settings from the rail, a 600px-height footer, mobile explicit close/route dismissal/focus, all routes/reloads, perspective switching and household/storage flows. Expanded/collapsed/mobile screenshots were reviewed after settling animations; previews are saved under `/tmp/roomieos-sidebar-review/`.
+- Manual review: collapse/expand from within the sidebar, navigate while collapsed, open/close mobile navigation, and inspect footer tools in a shorter window. Collapse state stays temporary, and no household facts/schema/storage keys changed. Chromium only; no deployment performed.
