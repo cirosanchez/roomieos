@@ -6,12 +6,14 @@ export function SelectField({
   id,
   label,
   help,
+  error,
   children,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
   id: string;
   label: string;
   help?: string;
+  error?: string;
   children: ReactNode;
 }) {
   return (
@@ -24,7 +26,16 @@ export function SelectField({
           {...props}
           id={id}
           className={`${controlStyles} appearance-none pr-10`}
-          aria-describedby={help ? `${id}-help` : undefined}
+          aria-invalid={error ? true : props["aria-invalid"]}
+          aria-describedby={
+            [
+              help && `${id}-help`,
+              error && `${id}-error`,
+              props["aria-describedby"],
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
         >
           {children}
         </select>
@@ -36,6 +47,11 @@ export function SelectField({
       {help && (
         <p id={`${id}-help`} className="text-sm text-muted">
           {help}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-error`} className="text-sm text-danger">
+          {error}
         </p>
       )}
     </div>

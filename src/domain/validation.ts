@@ -24,6 +24,13 @@ const calendarDate = z
   .refine(isCalendarDate, "Choose a valid calendar date.");
 const timestamp = z.iso.datetime({ offset: true });
 
+export const choreDraftSchema = z.strictObject({
+  title: text(100),
+  notes: z.string().max(1000),
+  assigneeId: id,
+  dueDate: calendarDate,
+});
+
 export const avatarSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("initials"), value: z.literal("") }),
   z.strictObject({ kind: z.literal("icon"), value: z.enum(avatarIcons) }),
@@ -67,12 +74,8 @@ const stateSchema = z
     ),
     selectedMemberId: id,
     chores: z.array(
-      z.strictObject({
+      choreDraftSchema.extend({
         id,
-        title: text(100),
-        notes: z.string().max(1000),
-        assigneeId: id,
-        dueDate: calendarDate,
         status: z.enum(["pending", "completed", "skipped"]),
         completionHistory: z.array(
           z.strictObject({ id, completedById: id, completedAt: timestamp }),

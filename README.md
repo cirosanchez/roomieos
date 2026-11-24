@@ -15,11 +15,11 @@ Open <http://localhost:3000>. Choose a sample household or create an empty house
 
 Household data is validated and saved only in this browser under `roomieos:v1`. Refresh preserves changes; sample data is never silently regenerated. Invalid/unsupported data requires explicit confirmed recovery. Storage errors keep the previous household and form entries. If another tab changes the saved household, reload before editing further.
 
-Chores, expenses and agreements currently show saved records without editing controls. Their CRUD tools, Kanban, expense balances and settlement actions belong to the next milestones. Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
+Chores support create/edit/delete, List and Board views, roommate/status filters, completion history and manual rotation with a confirmed due date. Click a chore title for details and actions. Completing a chore records the current demo perspective; reopening and rotating preserve its history. Expenses and agreements currently show saved records without editing controls; expense balances and settlement belong to later milestones. Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
 
 ## Current checkpoint
 
-Milestone 2 and its feedback loop are complete as of 23 November 2026. Next is Milestone 3: chore CRUD, immutable completion history, manual rotation, filters and List/Kanban. The final dashboard will add personal balances and a fuller personal/household arrangement during expense/integration work. See [PLAN.md](PLAN.md) for the handoff and actual verification results.
+Milestone 3 implements chores as of 23 November 2026. Next is Milestone 4: expense arithmetic, CRUD, multiple payers, equal/percentage/fixed splits, balances and settle/reopen. The final dashboard will add personal balances and a fuller personal/household arrangement during expense/integration work. See [PLAN.md](PLAN.md) for progress and actual verification results.
 
 ## Checks
 
@@ -31,7 +31,7 @@ npm run build
 npm run test:browser
 ```
 
-Vitest checks setup, sample validity, roster/currency guards, saved-payload validation and storage transactions/failures. Browser tests cover setup and persistence, profile switching, roster management, recovery, failed-save retries, reset confirmations, cross-tab conflicts, responsive overflow and native-dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
+Vitest checks chore CRUD, completion identity/history, rotation, archived members, local-calendar dates, setup, sample validity, roster/currency guards, saved-payload validation and storage transactions/failures. Browser tests cover chore CRUD/List/Board/filters/history, rotation confirmations, overdue date changes, long content, setup and persistence, profile switching, roster management, recovery, failed-save retries, reset confirmations, cross-tab conflicts, responsive overflow and native-dialog keyboard behavior at 375, 768 and 1280 px. Install Playwright Chromium once with `npx playwright install chromium`, or use an existing compatible Chromium executable:
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium-browser npm run test:browser

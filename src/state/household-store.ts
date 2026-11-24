@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { applyChoreAction, type ChoreAction } from "../domain/chores";
 import {
   applyHouseholdAction,
   createEmptyHousehold,
@@ -137,12 +138,21 @@ export function createHouseholdStore(
     return { ok: true };
   }
 
-  function dispatch(action: HouseholdAction, notice: string): CommandResult {
+  function dispatch(
+    action: HouseholdAction | ChoreAction,
+    notice: string,
+  ): CommandResult {
     if (snapshot.status !== "ready" || !snapshot.state)
       return failure("Open a valid household before making changes.");
     try {
       return write(
-        applyHouseholdAction(snapshot.state, action, makeId),
+        action.type === "add-chore" ||
+          action.type === "edit-chore" ||
+          action.type === "delete-chore" ||
+          action.type === "set-chore-status" ||
+          action.type === "rotate-chore"
+          ? applyChoreAction(snapshot.state, action, makeId, now())
+          : applyHouseholdAction(snapshot.state, action, makeId),
         notice,
       );
     } catch (error) {

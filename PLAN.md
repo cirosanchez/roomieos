@@ -2,11 +2,11 @@
 
 **Last updated:** 23 November 2026
 
-**Status:** Milestone 2 and its feedback loop complete; stopping for today after the Git checkpoint. No deployment performed.
+**Status:** Milestone 3 implementation and verification complete. No deployment performed.
 
-**Current milestone:** Milestone 2 — setup and local persistence complete.
+**Current milestone:** Milestone 3 — chores complete.
 
-**Next milestone:** Milestone 3 — chore CRUD, history, rotation and List/Kanban.
+**Next milestone:** Milestone 4 — expense arithmetic, CRUD, balances and settlement.
 
 **Delivery target:** Thursday, 26 November 2026; Friday, 27 November is the submission/fix buffer.
 
@@ -14,7 +14,7 @@
 
 Build a polished Next.js client-side prototype for ENTI 407. `docs/PRD.md` is authoritative for behavior; `docs/DESIGN.md` is authoritative for UI/UX. This document records approved architecture, sequencing and actual progress. It does not override those requirements.
 
-At plan approval, the repository contained documentation and a README, with no application scaffold. The foundation and household setup/persistence are now implemented; see the progress record below. Update this record after each working slice: check only completed work, record actual verification, and keep the current/next milestone accurate. Surface conflicts or new scope for user review rather than inventing requirements.
+At plan approval, the repository contained documentation and a README, with no application scaffold. The foundation, household setup/persistence and chores are now implemented; see the progress record below. Update this record after each working slice: check only completed work, record actual verification, and keep the current/next milestone accurate. Surface conflicts or new scope for user review rather than inventing requirements.
 
 ### Resolved requirements and defaults
 
@@ -79,7 +79,7 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 | [x] | 0. Planning record | Save approved plan; add document precedence and progress rules to AGENTS | Monday |
 | [x] | 1. Foundation | Scaffold, design tokens, responsive shell, shared controls/dialogs, test scripts; build passes | Completed Monday |
 | [x] | 2. Setup and persistence | Sample/empty setup, roster, profile switching, household settings, storage validation/recovery, reset/start over; refresh preserves edits | Completed Monday |
-| [ ] | 3. Chores | CRUD, status/history, rotation/date confirmation, filters, List/Kanban, overdue; both views use identical state | Tuesday |
+| [x] | 3. Chores | CRUD, status/history, rotation/date confirmation, filters, List/Kanban, overdue; both views use identical state | Completed Monday |
 | [ ] | 4. Expenses | Money utilities/tests first; then CRUD, multiple payers, three split modes, breakdowns, balances and settle/reopen | Wednesday |
 | [ ] | 5. Integration | Agreements CRUD, derived dashboard, complete sample data, consistent empty/error states and feedback | Wednesday |
 | [ ] | 6. Release | Accessibility/mobile checks, production build, Vercel verification, video and real prompt transcript | Thursday |
@@ -106,6 +106,16 @@ Each milestone ends with relevant checks, a reviewable commit and a progress upd
 - [x] Add confirmed reset/start-over, invalid/unsupported-data recovery, storage-error retries and cross-tab stale-write protection.
 - [x] Connect saved facts to the shell, personal chore summaries and read-only feature records without exposing unavailable CRUD controls.
 - [x] Verify domain/storage tests, browser flows at 375/768/1280 px, console diagnostics, lint, typecheck, formatting and the static build.
+
+### Milestone 3 TODOs
+
+- [x] Add pure chore create/edit/delete/status actions with required-field, active-assignment and date validation.
+- [x] Record completion identity/time once per transition to Completed; retain immutable history through reopen/edit/rotation and display newest first.
+- [x] Rotate through stable active roster order, including archived assignees and wraparound; preview the next roommate and confirm a new due date.
+- [x] Build labeled create/edit forms, details/history, status controls, confirmed deletion, filters and shared-state List/Board views.
+- [x] Preserve archived historical assignments during edits; require active reassignment or rotation before reopening.
+- [x] Verify local-calendar overdue/focus updates, contained keyboard-accessible Board scrolling, persistence, storage errors, cross-tab draft conflicts, long content and dialog focus at 375/768/1280 px.
+- [x] Run domain/storage and browser regressions, lint, typecheck, formatting and the production static build; record actual results below.
 
 ## 5. Dependencies, tests and risks
 
@@ -217,6 +227,25 @@ Foundation tooling also includes Playwright for real-browser layout/navigation/d
 - Resume with Milestone 3 when requested: pure chore actions first, then CRUD forms/details, immutable completion history, manual active-roster rotation with date confirmation, filters, List/Kanban and local-calendar overdue checks. Reuse the existing validated transaction store and test archive/restore behavior with up to 20 active members.
 - Expenses and agreements remain read-only; their editing/balances/settlement and the final dashboard distribution stay in later milestones. Photo uploads and deployment remain deferred.
 - Keep the real session transcript for the course prompt log; this handoff is a progress record, not a substitute for the authentic conversation export.
+
+### Chore implementation — 23 November 2026
+
+- Added pure chore CRUD/status/rotation actions through the existing validated save-before-publish store. Completion records use the selected demo profile and injected time/ID; unchanged Completed status adds no event. Reopening, editing and rotation preserve history; deletion removes the chore and its history.
+- Added create/edit forms, details with newest-first history, confirmed deletion, rotation with next-active-roommate/date preview, List/Board, assignee/status filters and local-calendar overdue indicators. Archived historical assignments remain editable; reopening requires active reassignment or rotation. New assignments exclude archived members.
+- Added actionable inline storage/conflict feedback without discarding drafts. Save failures retain prior facts/events and permit retry; same-browser cross-tab changes disable open form saves until explicit reload. Nested dialogs restore focus on cancel/Escape; deletion returns focus to New chore.
+- Verification: `npm test` passes 65 unit/storage tests (25 new). `npm run lint`, `npm run typecheck`, `npx prettier --check src tests` and `git diff --check` pass. `npm run build` passes and exports static routes to `out/`.
+- Verification: the full Chromium suite passes 62 tests with 1 intentional desktop navigation-drawer skip at 375/768/1280 px. Twenty-one new browser checks cover empty CRUD, form validation, current-profile history/newest-first order, reopen/recomplete, rotation/date validation/cancel, edit/delete confirmation, refresh, both views/filters, archived historical edits with 20 active roommates, failed-save retries, same-browser cross-tab draft protection, long content and local-midnight focus updates. The route regression continues to monitor console and uncaught errors; no hydration diagnostics were reported.
+- Initial simulated-midnight failures came from a runner/browser timezone mismatch in the fixture; the corrected test constructs the clock in the browser's local zone and now passes at all widths. Sandbox port restrictions initially blocked browser/build startup. Outside-sandbox execution succeeded; the build also required moving the generated Turbopack cache aside after it retained the restricted attempt's failure. No app configuration workaround or dependency was added.
+- Browser screenshots reviewed for desktop List, mobile Board and mobile history. Board scrolling is contained and keyboard accessible. README and prototype disclosure now describe available chore functionality. Existing `docs/logs/` content remains outside this slice.
+- Limits: Chromium verification only; view/filter choices are temporary UI state, while chore facts and history persist. Expenses/agreements remain read-only, and final dashboard composition stays in later milestones. No deployment performed.
+- Next slice: Milestone 4, beginning with integer-cent financial utilities and tests before expense forms, balances and settlement.
+
+### Manual review after Milestone 3
+
+- From an empty household, add a chore with notes and a due date; cancel an edit, save another, then refresh. Confirm all saved fields remain.
+- Switch demo perspective, complete a chore, reopen/recomplete it and inspect the newest-first history. Rotate it, checking the proposed roommate/date before confirming; refresh and verify previous completions remain.
+- Try status/roommate filters and both List/Board. On a phone, scroll across all three Board columns, change a status and open details. Compare an overdue pending chore with one due today.
+- Cancel deletion before confirming another deletion. Use Tab/Escape through forms/rotation/confirmations and check focus returns to the triggering control (or New chore after deletion). Browser-only storage and the demo-perspective disclosure should remain clear.
 
 ### Release deliverables
 

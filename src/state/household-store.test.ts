@@ -50,6 +50,85 @@ function harness(initial: string | null = null) {
 }
 
 describe("browser persistence transaction", () => {
+  it("persists chore completion identity/history, rotation and deletion across reloads", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    h.store.dispatch({ type: "select-member", id: "sam" }, "Switched");
+    expect(
+      h.store.dispatch(
+        { type: "set-chore-status", id: "kitchen", status: "completed" },
+        "Completed",
+      ).ok,
+    ).toBe(true);
+    const event = h.store.getSnapshot().state!.chores[0].completionHistory[0];
+    expect(event.completedById).toBe("sam");
+    expect(
+      h.store.dispatch(
+        { type: "rotate-chore", id: "kitchen", dueDate: "2026-12-01" },
+        "Rotated",
+      ).ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(h.store.getSnapshot().state!.chores[0]).toMatchObject({
+      assigneeId: "jordan",
+      status: "pending",
+      dueDate: "2026-12-01",
+      completionHistory: [event],
+    });
+    expect(
+      h.store.dispatch({ type: "delete-chore", id: "kitchen" }, "Deleted").ok,
+    ).toBe(true);
+    h.store.initialize();
+    expect(
+      h.store
+        .getSnapshot()
+        .state!.chores.some((chore) => chore.id === "kitchen"),
+    ).toBe(false);
+  });
+  it("keeps chore state/history unchanged on failed writes and allows retry", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    const before = h.raw();
+    h.failWrites(true);
+    expect(
+      h.store.dispatch(
+        { type: "set-chore-status", id: "kitchen", status: "completed" },
+        "Completed",
+      ).ok,
+    ).toBe(false);
+    expect(h.store.getSnapshot().state!.chores[0].completionHistory).toEqual(
+      [],
+    );
+    expect(h.store.getSnapshot().notice).toBeNull();
+    expect(h.raw()).toBe(before);
+    h.failWrites(false);
+    expect(
+      h.store.dispatch(
+        { type: "set-chore-status", id: "kitchen", status: "completed" },
+        "Completed",
+      ).ok,
+    ).toBe(true);
+    expect(
+      h.store.getSnapshot().state!.chores[0].completionHistory,
+    ).toHaveLength(1);
+  });
+  it("rejects chore changes from a stale tab without replacing external data", () => {
+    const h = harness();
+    h.store.initialize();
+    h.store.sample("CAD");
+    const external = JSON.stringify({
+      ...createSampleHousehold(now),
+      chores: [],
+    });
+    h.external(external);
+    expect(
+      h.store.dispatch({ type: "delete-chore", id: "kitchen" }, "Deleted").ok,
+    ).toBe(false);
+    expect(h.raw()).toBe(external);
+    expect(h.store.getSnapshot().conflict).toBe(true);
+  });
   it("does not seed or write during initialization, including repeated initialization", () => {
     const h = harness();
     expect(h.store.getSnapshot().status).toBe("loading");

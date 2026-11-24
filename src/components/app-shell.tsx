@@ -210,8 +210,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             shared expenses and house agreements.
           </p>
           <p>
-            Household setup, roommate settings and local saving are available.
-            Chore, expense and agreement editing are coming in later milestones.
+            Household setup, roommate settings, chores and local saving are
+            available. Expense and agreement editing are coming in later
+            milestones.
           </p>
           <p>
             Your household stays in this browser only. Switching roommates

@@ -55,7 +55,7 @@ export function Dialog({
       className={`fixed flex-col overflow-hidden border border-line bg-page p-0 text-ink shadow-xl ${variant === "drawer" ? "inset-y-0 left-0 m-0 h-dvh max-h-dvh w-80 max-w-[calc(100%-2rem)] rounded-r-xl" : "inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-lg rounded-xl"}`}
     >
       <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-3">
-        <h2 id={titleId} className="text-lg font-semibold">
+        <h2 id={titleId} className="min-w-0 break-words text-lg font-semibold">
           {title}
         </h2>
         <Button
@@ -70,7 +70,7 @@ export function Dialog({
       </div>
       <div className="overflow-y-auto overscroll-contain p-5">
         {description && (
-          <p id={descriptionId} className="mb-5 text-sm text-muted">
+          <p id={descriptionId} className="mb-5 break-words text-sm text-muted">
             {description}
           </p>
         )}

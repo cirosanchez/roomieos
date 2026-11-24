@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
 import { BookOpen, CheckSquare, House, Wallet } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -10,29 +9,9 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatusPill } from "@/components/ui/status-pill";
 import { useReadyHousehold } from "@/state/household-provider";
 import { activeMembers } from "@/domain/household";
-import { displayDate, localDate } from "@/domain/dates";
+import { displayDate } from "@/domain/dates";
 
-function subscribeDate(listener: () => void) {
-  window.addEventListener("focus", listener);
-  document.addEventListener("visibilitychange", listener);
-  return () => {
-    window.removeEventListener("focus", listener);
-    document.removeEventListener("visibilitychange", listener);
-  };
-}
-function useToday() {
-  return useSyncExternalStore(
-    subscribeDate,
-    () => localDate(new Date()),
-    () => "",
-  );
-}
 const sections = {
-  chores: {
-    title: "Chores",
-    description: "A little clarity for the everyday things.",
-    Icon: CheckSquare,
-  },
   expenses: {
     title: "Expenses",
     description: "Track shared spending without the spreadsheet.",
@@ -51,14 +30,8 @@ export function FoundationScreen({
   section: keyof typeof sections;
 }) {
   const { state } = useReadyHousehold();
-  const today = useToday();
   const { title, description, Icon } = sections[section];
-  const records =
-    section === "chores"
-      ? state.chores
-      : section === "expenses"
-        ? state.expenses
-        : state.agreements;
+  const records = section === "expenses" ? state.expenses : state.agreements;
   const nameFor = (id: string) =>
     state.members.find((member) => member.id === id)!.name;
   const money = (cents: number) =>
@@ -76,22 +49,18 @@ export function FoundationScreen({
       />
       <InlineNotice>
         Household data is saved locally.{" "}
-        {section === "chores"
-          ? "Chore editing, history details and the board are coming next."
-          : section === "expenses"
-            ? "Expense editing, balances and settlement controls are coming soon."
-            : "Agreement editing is coming soon."}
+        {section === "expenses"
+          ? "Expense editing, balances and settlement controls are coming soon."
+          : "Agreement editing is coming soon."}
       </InlineNotice>
       <div className="mt-6">
         {records.length === 0 ? (
           <EmptyState
             icon={<Icon className="size-6" />}
             title={
-              section === "chores"
-                ? "Nothing on the chore board"
-                : section === "expenses"
-                  ? "No shared expenses yet"
-                  : "Set the ground rules"
+              section === "expenses"
+                ? "No shared expenses yet"
+                : "Set the ground rules"
             }
           >
             <p>
@@ -104,35 +73,6 @@ export function FoundationScreen({
             className="divide-y divide-line rounded-[10px] border border-line"
             aria-label={title}
           >
-            {section === "chores" &&
-              state.chores.map((chore) => (
-                <li
-                  key={chore.id}
-                  className="flex flex-wrap items-start justify-between gap-3 p-5"
-                >
-                  <div className="min-w-0">
-                    <h2 className="break-words text-base font-semibold">
-                      {chore.title}
-                    </h2>
-                    <p className="mt-1 text-sm text-muted">
-                      {nameFor(chore.assigneeId)} · {displayDate(chore.dueDate)}
-                    </p>
-                    {chore.notes && (
-                      <p className="mt-2 break-words text-sm text-muted">
-                        {chore.notes}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill status={chore.status} />
-                    {chore.status === "pending" && chore.dueDate < today && (
-                      <span className="text-sm font-medium text-danger">
-                        Overdue
-                      </span>
-                    )}
-                  </div>
-                </li>
-              ))}
             {section === "expenses" &&
               state.expenses.map((expense) => (
                 <li key={expense.id} className="p-5">
@@ -267,8 +207,8 @@ export function FoundationDashboard() {
       </section>
       <div className="mt-8">
         <InlineNotice>
-          Saved on this browser only. Chore editing, expense balances and
-          agreement editing are still in development.{" "}
+          Saved on this browser only. Expense balances and agreement editing are
+          still in development.{" "}
           <Link
             href="/settings"
             className="font-medium text-accent underline underline-offset-4"
