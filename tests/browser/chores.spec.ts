@@ -1,7 +1,7 @@
 import { changeChoreStatus, expectChoreStatus } from "./ui-controls";
 import { selectItems } from "./ui-controls";
 import { getDialog, selectControl, expectControlValue } from "./ui-controls";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { createSampleHousehold } from "../../src/domain/sample";
 import { localDate, relativeDate } from "../../src/domain/dates";
 import { suggestedRotationDate } from "../../src/domain/chores";
@@ -452,6 +452,9 @@ test("a cross-tab change blocks an open chore draft until explicit reload", asyn
     "Unsaved draft",
   );
   await form.getByRole("button", { name: "Cancel", exact: true }).click();
+  await getDialog(page, { name: "Discard unsaved changes?", exact: true })
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Reload saved household", exact: true })
     .click();

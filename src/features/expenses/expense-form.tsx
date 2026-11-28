@@ -6,10 +6,11 @@ import {
 import { Checkbox } from "@/components/ui/primitives/checkbox";
 import { Textarea } from "@/components/ui/primitives/textarea";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useUnsavedChanges } from "@/components/ui/use-unsaved-changes";
 import { FormField, controlStyles } from "@/components/ui/form-field";
 import { SelectField, selectOptions } from "@/components/ui/select-field";
 import { InlineNotice } from "@/components/ui/inline-notice";
@@ -38,9 +39,14 @@ export function ExpenseForm({
   onClose: () => void;
 }) {
   const { state, store, conflict } = useReadyHousehold();
+  const formId = useId();
   const [draft, setDraft] = useState(() => initialExpenseDraft(state, expense));
   const [submitted, setSubmitted] = useState(false);
   const [saveError, setSaveError] = useState<string>();
+  const { requestClose, discardConfirmation } = useUnsavedChanges(
+    draft,
+    onClose,
+  );
   const preview = inspectExpenseDraft(state, draft, expense);
   const errors = submitted ? preview.errors : {};
   const members = [...state.members].sort((a, b) => a.order - b.order);
@@ -103,10 +109,20 @@ export function ExpenseForm({
       open
       size="wide"
       title={expense ? "Edit expense" : "Add expense"}
-      onClose={onClose}
+      onClose={requestClose}
       description={`Amounts are in ${state.household.currency}. This records shared spending in this browser.`}
+      footer={
+        <>
+          <Button variant="secondary" onClick={requestClose}>
+            Cancel
+          </Button>
+          <Button type="submit" form={formId} disabled={conflict}>
+            Save expense
+          </Button>
+        </>
+      }
     >
-      <form noValidate onSubmit={submit} className="space-y-7">
+      <form id={formId} noValidate onSubmit={submit} className="space-y-7">
         <section className="space-y-5" aria-label="Expense basics">
           <FormField
             id="expense-description"
@@ -510,15 +526,8 @@ export function ExpenseForm({
           </InlineNotice>
         )}
         {saveError && <InlineNotice tone="error">{saveError}</InlineNotice>}
-        <div className="flex flex-wrap justify-end gap-3 border-t border-line pt-5">
-          <Button variant="secondary" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={conflict}>
-            Save expense
-          </Button>
-        </div>
       </form>
+      {discardConfirmation}
     </Dialog>
   );
 }

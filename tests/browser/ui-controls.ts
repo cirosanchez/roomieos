@@ -4,7 +4,10 @@ export async function selectControl(
   option: string | { label: string },
 ) {
   await locator.click();
-  const options = locator.page().getByRole("option");
+  const options = locator
+    .page()
+    .getByRole("option")
+    .or(locator.page().getByRole("menuitemradio"));
   const item = options.getByText(
     typeof option === "string" ? option : option.label,
     { exact: true },
@@ -12,7 +15,9 @@ export async function selectControl(
   if (typeof option === "string")
     await locator
       .page()
-      .locator(`[role="option"][data-value=${JSON.stringify(option)}]`)
+      .locator(
+        `[role="option"][data-value=${JSON.stringify(option)}], [role="menuitemradio"][data-value=${JSON.stringify(option)}]`,
+      )
       .filter({ visible: true })
       .click();
   else await item.click();
@@ -35,7 +40,10 @@ export function getDialog(
 }
 export async function selectItems(locator: Locator) {
   await locator.click();
-  return locator.page().getByRole("option");
+  return locator
+    .page()
+    .getByRole("option")
+    .or(locator.page().getByRole("menuitemradio"));
 }
 
 export async function changeChoreStatus(

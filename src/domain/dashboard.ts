@@ -1,8 +1,9 @@
 import { activeMembers } from "./household";
 import { calculateBalances } from "./money";
+import { isOverdue } from "./chores";
 import type { AppState } from "./types";
 
-export function dashboardSummary(state: AppState) {
+export function dashboardSummary(state: AppState, today: string) {
   const selected = state.members.find(
     (member) => member.id === state.selectedMemberId,
   )!;
@@ -14,6 +15,10 @@ export function dashboardSummary(state: AppState) {
   return {
     selected,
     pendingChores,
+    overdueChoreCount: pendingChores.filter((chore) => isOverdue(chore, today))
+      .length,
+    dueTodayChoreCount: pendingChores.filter((chore) => chore.dueDate === today)
+      .length,
     netCents: calculateBalances(state.members, state.expenses).find(
       (row) => row.memberId === selected.id,
     )!.netCents,

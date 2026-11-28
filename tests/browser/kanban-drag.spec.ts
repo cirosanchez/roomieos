@@ -1,5 +1,5 @@
 import { expectChoreStatus } from "./ui-controls";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { selectControl } from "./ui-controls";
 import { createSampleHousehold } from "../../src/domain/sample";
 import type { AppState } from "../../src/domain/types";

@@ -10,7 +10,7 @@ export default function NotFound() {
       <p className="mt-3 text-muted">
         We couldn&apos;t find that page. Head back to the household workspace.
       </p>
-      <Link href="/" className={buttonStyles("primary", "mt-6")}>
+      <Link href="/dashboard" className={buttonStyles("primary", "mt-6")}>
         Back to workspace
       </Link>
     </main>

@@ -81,6 +81,55 @@ export const setupSchema = householdDraftSchema.extend({
     .max(MAX_ACTIVE_MEMBERS),
 });
 
+export const defaultSpaces = () => [
+  { id: "kitchen", name: "Kitchen", active: true },
+  { id: "living", name: "Shared living area", active: true },
+];
+const plannerBase = {
+  ownerId: id,
+  title: text(100),
+  startDate: calendarDate,
+  endDate: calendarDate,
+  startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+  notes: z.string().max(1000),
+};
+export const plannerDraftSchema = z
+  .discriminatedUnion("kind", [
+    z.strictObject({
+      ...plannerBase,
+      kind: z.literal("guest"),
+      spaceId: id.nullable(),
+    }),
+    z.strictObject({
+      ...plannerBase,
+      kind: z.literal("quiet"),
+      spaceId: z.null(),
+    }),
+    z.strictObject({
+      ...plannerBase,
+      kind: z.literal("reservation"),
+      spaceId: id,
+    }),
+  ])
+  .refine(
+    (e) => e.endDate + "T" + e.endTime > e.startDate + "T" + e.startTime,
+    { message: "End must be after start.", path: ["endTime"] },
+  );
+// Extend each strict variant before parsing persisted metadata.
+const persistedPlanner = z
+  .object({ id, createdAt: timestamp })
+  .passthrough()
+  .transform((value, ctx) => {
+    const { id: eventId, createdAt, ...draft } = value;
+    const parsed = plannerDraftSchema.safeParse(draft);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) ctx.addIssue({ ...issue });
+      return z.NEVER;
+    }
+    return { ...parsed.data, id: eventId, createdAt };
+  });
+
 const stateSchema = z
   .strictObject({
     schemaVersion: z.literal(1),
@@ -115,6 +164,10 @@ const stateSchema = z
       }),
     ),
     agreements: z.array(agreementDraftSchema.extend({ id })),
+    plannerEvents: z.array(persistedPlanner).default([]),
+    sharedSpaces: z
+      .array(z.strictObject({ id, name: text(60), active: z.boolean() }))
+      .default(defaultSpaces),
     starterMode: z.enum(["sample", "empty"]),
   })
   .superRefine((state, ctx) => {
@@ -141,6 +194,20 @@ const stateSchema = z
     for (const collection of [state.chores, state.expenses, state.agreements]) {
       if (!unique(collection.map((item) => item.id)))
         issue("Record identities must be unique.");
+    }
+    if (
+      !unique(state.plannerEvents.map((e) => e.id)) ||
+      !unique(state.sharedSpaces.map((s) => s.id)) ||
+      !unique(state.sharedSpaces.map((s) => s.name.toLowerCase()))
+    )
+      issue("Planner identities and space names must be unique.");
+    for (const event of state.plannerEvents) {
+      if (!members.has(event.ownerId)) issue("Event roommate does not exist.");
+      if (
+        event.spaceId &&
+        !state.sharedSpaces.some((s) => s.id === event.spaceId)
+      )
+        issue("Event space does not exist.");
     }
     const events = state.chores.flatMap((chore) => chore.completionHistory);
     if (!unique(events.map((event) => event.id)))

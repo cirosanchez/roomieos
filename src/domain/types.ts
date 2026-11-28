@@ -43,6 +43,21 @@ export type Expense = {
   createdAt: string;
 };
 export type Agreement = { id: string; title: string; details: string };
+export type SharedSpace = { id: string; name: string; active: boolean };
+export type PlannerEvent = {
+  id: string;
+  ownerId: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  notes: string;
+  createdAt: string;
+} & (
+  | { kind: "guest"; title: string; spaceId: string | null }
+  | { kind: "quiet"; title: string; spaceId: null }
+  | { kind: "reservation"; title: string; spaceId: string }
+);
 export type AppState = {
   schemaVersion: 1;
   household: { name: string; currency: Currency };
@@ -51,5 +66,7 @@ export type AppState = {
   chores: Chore[];
   expenses: Expense[];
   agreements: Agreement[];
+  plannerEvents: PlannerEvent[];
+  sharedSpaces: SharedSpace[];
   starterMode: "sample" | "empty";
 };

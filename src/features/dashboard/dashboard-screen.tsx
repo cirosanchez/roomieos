@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CheckSquare, House, Plus } from "lucide-react";
+import { ArrowUpRight, CheckSquare, House, Plus } from "lucide-react";
 import { Button, buttonStyles } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
@@ -18,8 +18,8 @@ import { ChoreDetails } from "../chores/chore-details";
 
 export function DashboardScreen() {
   const { state, store, conflict } = useReadyHousehold();
-  const summary = dashboardSummary(state);
   const today = useToday();
+  const summary = dashboardSummary(state, today);
   const [creating, setCreating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedChore = state.chores.find((chore) => chore.id === selectedId);
@@ -57,9 +57,15 @@ export function DashboardScreen() {
       />
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: "My pending chores", value: summary.pendingChores.length },
+          {
+            label: "My pending chores",
+            value: summary.pendingChores.length,
+            help: `${summary.overdueChoreCount} overdue · ${summary.dueTodayChoreCount} due today`,
+            href: "/chores",
+          },
           {
             label: "My balance",
+            href: "/expenses",
             value: formatMoney(
               Math.abs(summary.netCents),
               state.household.currency,
@@ -71,18 +77,30 @@ export function DashboardScreen() {
                   ? "You owe"
                   : "All settled",
           },
-          { label: "Open household expenses", value: summary.openExpenseCount },
-        ].map(({ label, value, help }) => (
-          <section
-            key={label}
-            aria-label={label}
-            className="min-w-0 rounded-[10px] border border-line p-5"
-          >
-            <h2 className="text-sm text-muted">{label}</h2>
-            <p className="mt-3 break-words text-[28px] font-semibold leading-tight tabular-nums">
-              {value}
-            </p>
-            {help && <p className="mt-2 text-sm text-muted">{help}</p>}
+          {
+            label: "Open household expenses",
+            value: summary.openExpenseCount,
+            href: "/expenses",
+          },
+        ].map(({ label, value, help, href }) => (
+          <section key={label} aria-label={label} className="min-w-0">
+            <Link
+              href={href}
+              aria-label={label}
+              className="group block h-full rounded-[10px] border border-line p-5 transition-colors hover:border-control hover:bg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="text-sm text-muted">{label}</h2>
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-muted group-hover:text-accent"
+                />
+              </div>
+              <p className="mt-3 break-words text-[28px] font-semibold leading-tight tabular-nums">
+                {value}
+              </p>
+              {help && <p className="mt-2 text-sm text-muted">{help}</p>}
+            </Link>
           </section>
         ))}
       </div>

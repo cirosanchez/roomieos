@@ -1,6 +1,6 @@
 import { selectItems } from "./ui-controls";
 import { getDialog, expectControlValue, selectControl } from "./ui-controls";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { createSampleHousehold } from "../../src/domain/sample";
 import { localDate } from "../../src/domain/dates";
 import type { AppState } from "../../src/domain/types";
@@ -127,7 +127,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(myNet(page)).toContainText("CAD 0.00");
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(
     page.getByRole("region", { name: "My balance", exact: true }),
   ).toContainText("CAD 0.00");
@@ -168,7 +168,7 @@ test("empty expense CRUD, cent preview, net balances and whole settlement persis
     fullPage: true,
   });
   await noOverflow(page);
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(
     page.getByRole("region", { name: "My balance", exact: true }),
   ).toContainText("CAD 0.66");
@@ -393,6 +393,9 @@ test("archived historical roles remain editable and require restoration to reope
     form(page).getByLabel("Share with Avery", { exact: false }),
   ).toHaveCount(0);
   await form(page).getByRole("button", { name: "Cancel", exact: true }).click();
+  await getDialog(page, { name: "Discard unsaved changes?", exact: true })
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
   await page.goto("/settings/");
   await page
     .getByRole("button", { name: "Restore Avery", exact: true })
@@ -569,7 +572,7 @@ test("20 participants, long text and large amounts fit forms, details, dashboard
     .getByRole("button", { name: "Cancel", exact: true })
     .click();
   await page.keyboard.press("Escape");
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await noOverflow(page);
 });
 
@@ -606,6 +609,9 @@ test("a settlement in another tab blocks an open expense draft until reload", as
   );
   await form(page, true)
     .getByRole("button", { name: "Cancel", exact: true })
+    .click();
+  await getDialog(page, { name: "Discard unsaved changes?", exact: true })
+    .getByRole("button", { name: "Discard changes", exact: true })
     .click();
   await page.keyboard.press("Escape");
   await page

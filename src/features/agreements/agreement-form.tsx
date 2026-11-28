@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/primitives/textarea";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useUnsavedChanges } from "@/components/ui/use-unsaved-changes";
 import { FormField, controlStyles } from "@/components/ui/form-field";
 import { InlineNotice } from "@/components/ui/inline-notice";
 import type { AgreementDraft } from "@/domain/agreements";
@@ -28,6 +29,10 @@ export function AgreementForm({
     Partial<Record<keyof AgreementDraft, string>>
   >({});
   const [saveError, setSaveError] = useState<string>();
+  const { requestClose, discardConfirmation } = useUnsavedChanges(
+    draft,
+    onClose,
+  );
   function change(field: keyof AgreementDraft, value: string) {
     setDraft({ ...draft, [field]: value });
     setErrors({ ...errors, [field]: undefined });
@@ -67,7 +72,7 @@ export function AgreementForm({
       returnFocusId={
         agreement ? `agreement-actions-${agreement.id}` : undefined
       }
-      onClose={onClose}
+      onClose={requestClose}
     >
       <form noValidate onSubmit={submit} className="space-y-5">
         <FormField
@@ -117,7 +122,7 @@ export function AgreementForm({
         )}
         {saveError && <InlineNotice tone="error">{saveError}</InlineNotice>}
         <div className="flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={requestClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={conflict}>
@@ -125,6 +130,7 @@ export function AgreementForm({
           </Button>
         </div>
       </form>
+      {discardConfirmation}
     </Dialog>
   );
 }

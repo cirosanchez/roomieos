@@ -12,6 +12,7 @@ type DialogProps = {
   title: string;
   description?: string;
   children: ReactNode;
+  footer?: ReactNode;
   variant?: "modal" | "drawer";
   id?: string;
   size?: "default" | "wide";
@@ -23,6 +24,7 @@ export function Dialog({
   title,
   description,
   children,
+  footer,
   variant = "modal",
   id,
   size = "default",
@@ -98,7 +100,7 @@ export function Dialog({
             <X aria-hidden="true" className="size-5" />
           </Button>
         </D.DialogHeader>
-        <div className="overflow-y-auto overscroll-contain p-5">
+        <div className="min-h-0 overflow-y-auto overscroll-contain p-5">
           {description && (
             <D.DialogDescription className="mb-5 break-words">
               {description}
@@ -106,6 +108,11 @@ export function Dialog({
           )}
           {children}
         </div>
+        {footer && (
+          <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-line bg-page px-5 py-4">
+            {footer}
+          </div>
+        )}
       </D.DialogContent>
     </D.Dialog>
   );
@@ -117,11 +124,13 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel = "Cancel",
   destructive = false,
   error,
 }: Omit<DialogProps, "children" | "variant" | "id"> & {
   onConfirm: () => void;
   confirmLabel: string;
+  cancelLabel?: string;
   destructive?: boolean;
   error?: string;
 }) {
@@ -158,7 +167,7 @@ export function ConfirmDialog({
         {error && <InlineNotice tone="error">{error}</InlineNotice>}
         <div className="flex flex-wrap justify-end gap-3">
           <Button ref={cancel} variant="secondary" onClick={onClose}>
-            Cancel
+            {cancelLabel}
           </Button>
           <Button
             variant={destructive ? "danger" : "primary"}

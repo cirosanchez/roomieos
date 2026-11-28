@@ -25,7 +25,7 @@ export function HouseholdGate({
   const hasHousehold = status === "ready" && welcome;
   useEffect(() => {
     if (needsSetup) router.replace("/welcome");
-    if (hasHousehold) router.replace("/");
+    if (hasHousehold) router.replace("/dashboard");
   }, [needsSetup, hasHousehold, router, pathname]);
 
   if (status === "loading" || needsSetup || hasHousehold)

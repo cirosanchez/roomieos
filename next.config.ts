@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
   poweredByHeader: false,
-  // Keep development tools clear of the sidebar footer.
-  devIndicators: { position: "bottom-right" },
+  // Keep development tools clear of bottom-right feedback notifications.
+  devIndicators: { position: "bottom-left" },
   reactStrictMode: true,
 };
 

@@ -23,9 +23,13 @@ Agreements support create/edit/delete with optional multiline details, keyboard-
 
 Photo uploads remain deferred; initials and 40 named icon avatars work locally, grouped by nature, animals, food/drink, hobbies and home/favorites.
 
+Search expense descriptions or use All/Open/Settled to find records; filtering the list does not change outstanding balances. Edited chore, expense and agreement forms offer Keep editing or Discard changes before closing with Cancel, the close button, Escape or a backdrop click. Untouched forms close directly. Drafts are temporary and are not restored after leaving or refreshing the page.
+
+Dashboard summary cards link to Chores or Expenses. The personal chore card includes overdue and due-today counts based on the selected roommate and the browser's local calendar date.
+
 ## Current checkpoint
 
-Milestone 5 implements agreements and the complete dashboard as of 24 November 2026. Next is Milestone 6: final release/accessibility review, Vercel verification and course submission materials. See [PLAN.md](PLAN.md) for progress and actual verification results.
+Core app milestones and approved usability follow-ups are implemented as of 25 November 2026. Next is Milestone 6: final release/accessibility review, Vercel verification and course submission materials. See [PLAN.md](PLAN.md) for progress and actual verification results.
 
 ## Checks
 
@@ -63,3 +67,7 @@ Keep hydration diagnostics enabled. The route browser test checks both uncaught 
 `npm run build` exports static files to `out/`, suitable for Vercel. There are no backend API routes, server mutations, remote fonts or service integrations. Project scripts do not deploy automatically.
 
 Read [AGENTS.md](AGENTS.md), [PLAN.md](PLAN.md), [PRD](docs/PRD.md) and [DESIGN](docs/DESIGN.md) before implementation. PLAN tracks verified progress; PRD and DESIGN remain authoritative for behavior and UI/UX.
+
+### Household planner
+
+Open **Planner** for guest visits, quiet-time requests and shared-space bookings. Week and Day views show the full household; overnight guests appear above the hourly grid. Use Calendar options for the mini month navigator and event-type filters, or Manage spaces to add, rename or archive bookable areas. Click a slot or New event to schedule; open an event to edit/delete. Overlap warnings allow Save anyway after review. All times are local and all data remains in this browser. Existing households start with an empty planner; sample setup/reset includes example events.

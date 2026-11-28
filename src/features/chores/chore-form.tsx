@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/primitives/textarea";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { useUnsavedChanges } from "@/components/ui/use-unsaved-changes";
 import { FormField, controlStyles } from "@/components/ui/form-field";
 import { InlineNotice } from "@/components/ui/inline-notice";
 import { SelectField, selectOptions } from "@/components/ui/select-field";
@@ -42,6 +43,10 @@ export function ChoreForm({
     Partial<Record<keyof ChoreDraft, string>>
   >({});
   const [saveError, setSaveError] = useState<string>();
+  const { requestClose, discardConfirmation } = useUnsavedChanges(
+    draft,
+    onClose,
+  );
   const archivedAssignee =
     chore &&
     state.members.find(
@@ -93,7 +98,11 @@ export function ChoreForm({
     else setSaveError(result.error);
   }
   return (
-    <Dialog open title={chore ? "Edit chore" : "New chore"} onClose={onClose}>
+    <Dialog
+      open
+      title={chore ? "Edit chore" : "New chore"}
+      onClose={requestClose}
+    >
       <form noValidate onSubmit={submit} className="space-y-5">
         <FormField
           id="chore-title"
@@ -168,7 +177,7 @@ export function ChoreForm({
         )}
         {saveError && <InlineNotice tone="error">{saveError}</InlineNotice>}
         <div className="flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={requestClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={conflict}>
@@ -176,6 +185,7 @@ export function ChoreForm({
           </Button>
         </div>
       </form>
+      {discardConfirmation}
     </Dialog>
   );
 }

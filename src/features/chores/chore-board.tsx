@@ -265,10 +265,37 @@ export function ChoreBoard({
     drag && !disabled ? chores.find((c) => c.id === drag.id) : undefined;
   return (
     <>
-      <p id="board-drag-help" className="mb-3 text-xs text-muted">
+      <p
+        id="board-drag-help"
+        className="sr-only xl:not-sr-only xl:mb-3 xl:text-xs xl:text-muted"
+      >
         Drag cards between columns. On a keyboard, focus a drag handle and press
         Space to pick up, arrow keys to move, and Space to drop.
       </p>
+      <div className="mb-4 space-y-2 xl:hidden">
+        <p className="text-sm text-muted">Swipe sideways or choose a column.</p>
+        <nav aria-label="Chore columns" className="grid grid-cols-3 gap-2">
+          {choreStatuses.map((status) => (
+            <Button
+              key={status}
+              variant="secondary"
+              aria-label={`Show ${choreStatusLabels[status]} column`}
+              aria-controls={`chore-column-${status}`}
+              className="min-w-0 gap-1 px-2 text-xs sm:text-sm"
+              onClick={() =>
+                board.current
+                  ?.querySelector(`[data-chore-column="${status}"]`)
+                  ?.scrollIntoView({ block: "nearest", inline: "start" })
+              }
+            >
+              {choreStatusLabels[status]}
+              <span className="text-muted">
+                {chores.filter((chore) => chore.status === status).length}
+              </span>
+            </Button>
+          ))}
+        </nav>
+      </div>
       <p
         role="status"
         aria-live="polite"
@@ -292,6 +319,7 @@ export function ChoreBoard({
             return (
               <section
                 key={column}
+                id={`chore-column-${column}`}
                 data-chore-column={column}
                 aria-label={`${choreStatusLabels[column]} chores`}
                 className={`min-h-80 min-w-0 rounded-xl border p-3 transition-colors ${over ? "border-accent bg-selected ring-1 ring-accent" : "border-line bg-sidebar"}`}
@@ -326,7 +354,7 @@ export function ChoreBoard({
                         <Button
                           variant="ghost"
                           onClick={() => onOpen(chore)}
-                          className="h-auto min-w-0 max-w-full flex-1 justify-start px-1 text-left font-semibold whitespace-normal text-ink hover:bg-transparent hover:text-accent [overflow-wrap:anywhere]"
+                          className="h-auto min-w-0 max-w-full flex-1 cursor-pointer justify-start px-1 text-left font-semibold whitespace-normal text-accent underline decoration-accent/40 underline-offset-4 hover:bg-transparent hover:text-accent hover:decoration-accent [overflow-wrap:anywhere]"
                         >
                           {chore.title}
                         </Button>

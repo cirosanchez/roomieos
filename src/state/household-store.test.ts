@@ -428,3 +428,48 @@ describe("browser persistence transaction", () => {
     expect(h.raw()).toBeNull();
   });
 });
+
+describe("planner persistence", () => {
+  it("keeps household and storage intact when planner saving fails, then allows retry", () => {
+    const h = harness(JSON.stringify(createSampleHousehold(now)));
+    h.store.initialize();
+    const before = h.store.getSnapshot().state;
+    const raw = h.raw();
+    const action = {
+      type: "save-planner-event" as const,
+      event: {
+        kind: "guest" as const,
+        title: "Visitor",
+        ownerId: "avery",
+        startDate: "2026-12-10",
+        startTime: "10:00",
+        endDate: "2026-12-10",
+        endTime: "11:00",
+        notes: "",
+        spaceId: null,
+      },
+    };
+    h.failWrites(true);
+    expect(h.store.dispatch(action, "Saved").ok).toBe(false);
+    expect(h.store.getSnapshot().state).toBe(before);
+    expect(h.raw()).toBe(raw);
+    h.failWrites(false);
+    expect(h.store.dispatch(action, "Saved").ok).toBe(true);
+    expect(JSON.parse(h.raw()!).plannerEvents.at(-1).title).toBe("Visitor");
+  });
+  it("blocks stale planner changes across tabs", () => {
+    const h = harness(JSON.stringify(createSampleHousehold(now)));
+    h.store.initialize();
+    h.external(
+      JSON.stringify({
+        ...createSampleHousehold(now),
+        household: { name: "Changed", currency: "CAD" },
+      }),
+    );
+    expect(
+      h.store.dispatch({ type: "save-space", name: "Study" }, "Saved").ok,
+    ).toBe(false);
+    expect(h.store.getSnapshot().conflict).toBe(true);
+    expect(h.store.getSnapshot().state?.sharedSpaces).toHaveLength(2);
+  });
+});

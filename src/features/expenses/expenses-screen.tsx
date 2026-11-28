@@ -4,12 +4,17 @@ import { useState } from "react";
 import { Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FormField } from "@/components/ui/form-field";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@/components/ui/primitives/toggle-group";
 import { MemberAvatar } from "@/components/ui/member-avatar";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatusPill } from "@/components/ui/status-pill";
 import { displayDate } from "@/domain/dates";
 import { formatMoney } from "@/domain/money";
-import type { Expense } from "@/domain/types";
+import type { Expense, ExpenseStatus } from "@/domain/types";
 import { useReadyHousehold } from "@/state/household-provider";
 import { ExpenseForm } from "./expense-form";
 import { ExpenseDetails } from "./expense-details";
@@ -19,11 +24,25 @@ export function ExpensesScreen() {
   const { state, store, conflict } = useReadyHousehold();
   const [creating, setCreating] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<ExpenseStatus | "all">("all");
   const selected = state.expenses.find((expense) => expense.id === selectedId);
-  const expenses = [...state.expenses].sort(
-    (a, b) =>
-      b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
-  );
+  const search = query.trim().toLocaleLowerCase();
+  const expenses = state.expenses
+    .filter(
+      (expense) =>
+        (status === "all" || expense.status === status) &&
+        expense.description.toLocaleLowerCase().includes(search),
+    )
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+    );
+  function clearFilters() {
+    setQuery("");
+    setStatus("all");
+    document.getElementById("expense-search")?.focus();
+  }
   function newExpense() {
     store.dismissFeedback();
     setCreating(true);
@@ -73,6 +92,60 @@ export function ExpensesScreen() {
         }
       />
       <ExpenseBalances />
+      {state.expenses.length > 0 && (
+        <section aria-label="Find expenses" className="mb-5 space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1 sm:max-w-sm">
+              <FormField
+                id="expense-search"
+                label="Search expenses"
+                type="search"
+                placeholder="Search descriptions"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <p id="expense-status-label" className="text-sm font-medium">
+                Status
+              </p>
+              <ToggleGroup
+                aria-labelledby="expense-status-label"
+                value={[status]}
+                onValueChange={(values) => {
+                  if (values[0]) setStatus(values[0] as ExpenseStatus | "all");
+                }}
+                variant="outline"
+                spacing={1}
+              >
+                {(["all", "open", "settled"] as const).map((value) => (
+                  <ToggleGroupItem
+                    key={value}
+                    value={value}
+                    className="min-h-11 px-4 aria-pressed:border-accent aria-pressed:bg-selected aria-pressed:text-accent"
+                  >
+                    {value === "all"
+                      ? "All"
+                      : value === "open"
+                        ? "Open"
+                        : "Settled"}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p role="status" className="text-sm text-muted">
+              Showing {expenses.length} of {state.expenses.length} expenses.
+            </p>
+            {expenses.length > 0 && (query || status !== "all") && (
+              <Button variant="ghost" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
       {expenses.length ? (
         <>
           <div className="hidden rounded-[10px] border border-line lg:block">
@@ -164,6 +237,20 @@ export function ExpensesScreen() {
             ))}
           </ul>
         </>
+      ) : state.expenses.length > 0 ? (
+        <EmptyState
+          icon={<Wallet className="size-6" />}
+          title="No matching expenses"
+          action={
+            <Button variant="secondary" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          }
+        >
+          <p>
+            Try another description or clear the filters to see all expenses.
+          </p>
+        </EmptyState>
       ) : (
         <EmptyState
           icon={<Wallet className="size-6" />}
@@ -185,7 +272,13 @@ export function ExpensesScreen() {
         <ExpenseDetails
           key={selected.id}
           expense={selected}
-          onClose={() => setSelectedId(null)}
+          onClose={() => {
+            setSelectedId(null);
+            if (!expenses.some((expense) => expense.id === selectedId))
+              requestAnimationFrame(() =>
+                document.getElementById("add-expense")?.focus(),
+              );
+          }}
           onDeleted={() => {
             setSelectedId(null);
             requestAnimationFrame(() =>

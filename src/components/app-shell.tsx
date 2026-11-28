@@ -1,14 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useDemoLogin } from "@/features/demo-login/demo-login-provider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BookOpen,
+  CalendarDays,
   CheckSquare,
+  ChevronRight,
   House,
   Info,
   LayoutDashboard,
+  LogOut,
   PanelLeftOpen,
   PanelLeftClose,
   Menu,
@@ -37,8 +42,9 @@ import {
 } from "./ui/primitives/sidebar";
 
 const navigation = [
-  { href: "/", label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/chores", label: "Chores", Icon: CheckSquare },
+  { href: "/planner", label: "Planner", Icon: CalendarDays },
   { href: "/expenses", label: "Expenses", Icon: Wallet },
   { href: "/agreements", label: "Agreements", Icon: BookOpen },
   { href: "/settings", label: "Settings", Icon: Settings },
@@ -86,7 +92,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function ShellContent({ children }: { children: ReactNode }) {
+  const demoLogin = useDemoLogin();
+  const router = useRouter();
   const { state, error, notice, store } = useReadyHousehold();
+  // Each publication gets a fresh snapshot, even for repeated messages.
+  const feedback = store.getSnapshot();
   const pathname = usePathname();
   const { open, setOpen, openMobile, setOpenMobile, isMobile } = useSidebar();
   const [aboutOpen, setAboutOpen] = useState(false);
@@ -108,6 +118,11 @@ function ShellContent({ children }: { children: ReactNode }) {
   useEffect(() => {
     setOpenMobile(false);
   }, [pathname, setOpenMobile]);
+  useEffect(() => {
+    if (!feedback.error && !feedback.notice) return;
+    const timer = window.setTimeout(() => store.dismissFeedback(), 3000);
+    return () => window.clearTimeout(timer);
+  }, [feedback, store]);
 
   return (
     <>
@@ -122,7 +137,7 @@ function ShellContent({ children }: { children: ReactNode }) {
           className={`shrink-0 border-b border-line ${collapsed ? "items-center gap-1 px-2 py-3" : "h-20 flex-row items-center justify-between gap-1 px-3 py-2"}`}
         >
           <Link
-            href="/"
+            href="/dashboard"
             aria-label="RoomieOS dashboard"
             onClick={() => setOpenMobile(false)}
             className={`inline-flex min-h-11 min-w-0 items-center rounded-lg ${collapsed ? "w-11 justify-center" : "pl-1"}`}
@@ -213,6 +228,29 @@ function ShellContent({ children }: { children: ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
+            <SidebarMenu className="group-data-[collapsible=icon]:items-center">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Log out of demo"
+                  aria-label="Log out of demo"
+                  onClick={() => {
+                    if (demoLogin.logout()) {
+                      setOpenMobile(false);
+                      router.replace("/login");
+                    }
+                  }}
+                  className="min-h-11 gap-3 rounded-lg px-3 text-muted hover:bg-hover hover:text-ink group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:[&>span]:hidden"
+                >
+                  <LogOut aria-hidden="true" className="size-[18px]" />
+                  <span>Log out of demo</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+            {demoLogin.error && (
+              <p role="alert" className="px-3 text-sm text-danger">
+                {demoLogin.error}
+              </p>
+            )}
             <div
               role="note"
               aria-label="Local prototype. Saved on this browser only."
@@ -229,8 +267,8 @@ function ShellContent({ children }: { children: ReactNode }) {
         </nav>
       </Sidebar>
       <div className="min-w-0 flex-1">
-        <header className="flex min-h-20 items-center justify-between gap-3 border-b border-line px-4 sm:px-5 lg:px-10">
-          <div className="flex min-w-0 items-center gap-3">
+        <header className="flex h-20 items-center justify-between gap-3 border-b border-line px-4 sm:px-5 lg:px-10">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Button
               id="mobile-nav-toggle"
               variant="ghost"
@@ -246,15 +284,28 @@ function ShellContent({ children }: { children: ReactNode }) {
             <div className="lg:hidden">
               <Wordmark compact />
             </div>
-            <div className="hidden min-w-0 items-center gap-2 text-sm text-muted lg:flex">
-              <span className="max-w-48 truncate" title={state.household.name}>
-                {state.household.name}
-              </span>
-              <span aria-hidden="true" className="px-1 text-line-strong">
-                /
-              </span>
-              <span className="truncate text-ink">{currentPage}</span>
-            </div>
+            <nav aria-label="Breadcrumb" className="hidden min-w-0 lg:block">
+              <ol className="flex min-w-0 items-center gap-3 text-sm">
+                <li className="flex min-w-0 items-center gap-2 text-muted">
+                  <House aria-hidden="true" className="size-4 shrink-0" />
+                  <span
+                    className="max-w-48 truncate"
+                    title={state.household.name}
+                  >
+                    {state.household.name}
+                  </span>
+                </li>
+                <li aria-hidden="true" className="shrink-0 text-muted">
+                  <ChevronRight className="size-3.5" />
+                </li>
+                <li
+                  aria-current="page"
+                  className="truncate font-medium text-ink"
+                >
+                  {currentPage}
+                </li>
+              </ol>
+            </nav>
           </div>
           <ProfileSwitcher />
         </header>
@@ -264,28 +315,32 @@ function ShellContent({ children }: { children: ReactNode }) {
           tabIndex={-1}
           className="mx-auto w-full max-w-[1120px] px-4 py-8 outline-none sm:px-5 sm:py-10 lg:px-10 lg:py-12"
         >
-          {(error || notice) && (
-            <div className="mb-6 flex items-start justify-between gap-2 rounded-[7px] bg-subtle">
-              <div
-                className="min-w-0 flex-1"
-                role={error ? undefined : "status"}
-              >
-                <InlineNotice tone={error ? "error" : "neutral"}>
-                  {error ?? notice}
-                </InlineNotice>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label="Dismiss message"
-                onClick={() => store.dismissFeedback()}
-              >
-                <span aria-hidden="true">×</span>
-              </Button>
-            </div>
-          )}
           {children}
         </main>
+
+        {(error || notice) && (
+          <div
+            className={`fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[60] flex w-[calc(100vw-2rem)] max-w-sm animate-in items-start justify-between gap-2 rounded-xl border border-line shadow-lg duration-200 fade-in slide-in-from-bottom-2 ${error ? "bg-danger-bg" : "bg-subtle"}`}
+          >
+            <div
+              className="min-w-0 flex-1 [overflow-wrap:anywhere]"
+              role={error ? undefined : "status"}
+            >
+              <InlineNotice tone={error ? "error" : "neutral"}>
+                {error ?? notice}
+              </InlineNotice>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Dismiss message"
+              className="shrink-0"
+              onClick={() => store.dismissFeedback()}
+            >
+              <X aria-hidden="true" className="size-4" />
+            </Button>
+          </div>
+        )}
 
         <Dialog
           open={aboutOpen}

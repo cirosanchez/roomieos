@@ -1,6 +1,6 @@
 import { changeChoreStatus } from "./ui-controls";
 import { getDialog, expectControlValue, selectControl } from "./ui-controls";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { createSampleHousehold } from "../../src/domain/sample";
 import type { AppState } from "../../src/domain/types";
 
@@ -126,6 +126,9 @@ test("agreement CRUD validates, persists and restores focus through keyboard men
   await expect(agreementForm(page, true)).toBeVisible();
   await agreementForm(page, true).getByLabel("Title").fill("Cancelled draft");
   await page.keyboard.press("Escape");
+  await getDialog(page, { name: "Discard unsaved changes?", exact: true })
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
   await expect(menu).toBeFocused();
   expect((await saved(page)).agreements[0].title).toBe("Quiet hours");
   await action(page, "Quiet hours", "Edit agreement");
@@ -279,6 +282,9 @@ test("agreements stay household-wide across perspectives and cross-tab changes b
   await agreementForm(page)
     .getByRole("button", { name: "Cancel", exact: true })
     .click();
+  await getDialog(page, { name: "Discard unsaved changes?", exact: true })
+    .getByRole("button", { name: "Discard changes", exact: true })
+    .click();
   await page
     .getByRole("button", { name: "Reload saved household", exact: true })
     .click();
@@ -318,7 +324,7 @@ test("long agreement and dashboard content wraps without page or dialog overflow
     fullPage: true,
   });
   await page.keyboard.press("Escape");
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await noOverflow(page);
   await page.screenshot({
     path: testInfo.outputPath("dashboard-long-content.png"),
@@ -329,7 +335,7 @@ test("long agreement and dashboard content wraps without page or dialog overflow
 test("dashboard personal chores and household snapshot update through real chore actions", async ({
   page,
 }, testInfo) => {
-  await seed(page, "/");
+  await seed(page, "/dashboard/");
   const snapshot = summaryCard(page, "Household at a glance");
   await expect(summaryCard(page, "My pending chores")).toContainText("1");
   await expect(summaryCard(page, "My balance")).toContainText("CAD 10.00");
@@ -403,7 +409,7 @@ test("dashboard personal chores and household snapshot update through real chore
 test("empty dashboard calls to action create real chores and agreements and refresh retains their counts", async ({
   page,
 }) => {
-  await seed(page, "/", empty());
+  await seed(page, "/dashboard/", empty());
   const snapshot = summaryCard(page, "Household at a glance");
   await expect(summaryCard(page, "My pending chores")).toContainText("0");
   await expect(summaryCard(page, "My balance")).toContainText("CAD 0.00");
@@ -424,7 +430,7 @@ test("empty dashboard calls to action create real chores and agreements and refr
     page.getByRole("region", { name: "Chore board", exact: true }),
   ).toBeVisible();
   await changeChoreStatus(page, "Wash mugs", "skipped");
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(summaryCard(page, "My pending chores")).toContainText("0");
   await expect(snapshot).toContainText("Skipped chores1");
   await page
@@ -434,7 +440,7 @@ test("empty dashboard calls to action create real chores and agreements and refr
     "House agreements",
   );
   await createAgreement(page, "Quiet kitchen");
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(
     page.getByRole("link", { name: "View 1 house agreement", exact: true }),
   ).toBeVisible();
@@ -459,7 +465,7 @@ test.describe("dashboard local calendar", () => {
     await page.clock.install({ time });
     const state = createSampleHousehold(new Date(2026, 10, 24, 12));
     state.chores[0].dueDate = "2026-11-24";
-    await seed(page, "/", state);
+    await seed(page, "/dashboard/", state);
     await expect(page.getByText("Overdue", { exact: true })).toHaveCount(0);
     await page.clock.setSystemTime(new Date(time.getTime() + 120_000));
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));

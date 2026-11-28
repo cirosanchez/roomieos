@@ -1,5 +1,7 @@
 # RoomieOS — Product Requirements Document
 
+**Amended 24 November 2026 — approved demo entry flow:** `/` is a public landing page; `/login` is a clearly labeled client-only demo login. Successful login persists until explicit logout using a separate `roomieos:demo-login` localStorage flag. The dashboard moves to `/dashboard`; setup and workspace routes require this simulated login. Credentials are not displayed or prefilled. Logout preserves household data. This supersedes the earlier no-login entry flow only; no real accounts, authentication service or backend is introduced.
+
 **Version:** 1.1 · **Project:** ENTI 407 Creation Project · **Target:** Friday, 27 November 2026  
 **Product type:** Interactive, client-side prototype (not a deployed multi-user service)  
 **Status:** Approved product decisions; implementation-ready
@@ -328,3 +330,9 @@ If time runs short, preserve: working setup + CRUD persistence, accurate expense
 - **No scheduling service:** The Rotate button advances a chore manually; no automatic weekly jobs.
 - **No backend security model:** Avoid any claim that RoomieOS protects real shared household financial records.
 - **Prototype scope:** Product direction can suggest future collaboration features, but they are not part of Friday's build.
+
+## Approved v2 addition — Household planner (25 November 2026)
+
+The user approved a local household Planner at `/planner` with Week/Day timed views, guest heads-ups, household-wide quiet requests and shared-space reservations. Guest visits record names, host and arrival/departure; overnight visits appear above the hours across occupied dates (a midnight departure excludes that departure date). Quiet requests and reservations have titles, roommate ownership, date/time ranges and optional notes. All events support create, edit and confirmed delete; no recurrence, notifications or real collaboration.
+
+Conflicts are advisory: warn for same-space reservation overlap or quiet time overlapping guests/reservations, then allow explicit Save anyway. Adjacent end/start times do not overlap. Shared spaces default to Kitchen and Shared living area and support add/rename/archive with historical references retained. Show the complete household calendar regardless of selected perspective; perspective supplies the default owner only. Existing valid v1 payloads gain empty planner events and default spaces without reseeding. Continue using `roomieos:v1`, schemaVersion 1, save-before-publish, runtime validation and stale-tab guards. Times are local wall-clock values, without timezone conversion.

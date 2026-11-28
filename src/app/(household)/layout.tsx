@@ -1,3 +1,4 @@
+import { DemoLoginGate } from "@/features/demo-login/demo-login-provider";
 import { AppShell } from "@/components/app-shell";
 import { HouseholdGate } from "@/state/household-gate";
 
@@ -7,8 +8,10 @@ export default function HouseholdLayout({
   children: React.ReactNode;
 }) {
   return (
-    <HouseholdGate>
-      <AppShell>{children}</AppShell>
-    </HouseholdGate>
+    <DemoLoginGate>
+      <HouseholdGate>
+        <AppShell>{children}</AppShell>
+      </HouseholdGate>
+    </DemoLoginGate>
   );
 }

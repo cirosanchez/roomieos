@@ -1,3 +1,4 @@
+import { applyPlannerAction, type PlannerAction } from "../domain/planner";
 import { ZodError } from "zod";
 import {
   applyAgreementAction,
@@ -144,29 +145,39 @@ export function createHouseholdStore(
   }
 
   function dispatch(
-    action: HouseholdAction | ChoreAction | ExpenseAction | AgreementAction,
+    action:
+      | HouseholdAction
+      | ChoreAction
+      | ExpenseAction
+      | AgreementAction
+      | PlannerAction,
     notice: string,
   ): CommandResult {
     if (snapshot.status !== "ready" || !snapshot.state)
       return failure("Open a valid household before making changes.");
     try {
       return write(
-        action.type === "add-chore" ||
-          action.type === "edit-chore" ||
-          action.type === "delete-chore" ||
-          action.type === "set-chore-status" ||
-          action.type === "rotate-chore"
-          ? applyChoreAction(snapshot.state, action, makeId, now())
-          : action.type === "add-expense" ||
-              action.type === "edit-expense" ||
-              action.type === "delete-expense" ||
-              action.type === "set-expense-status"
-            ? applyExpenseAction(snapshot.state, action, makeId, now())
-            : action.type === "add-agreement" ||
-                action.type === "edit-agreement" ||
-                action.type === "delete-agreement"
-              ? applyAgreementAction(snapshot.state, action, makeId)
-              : applyHouseholdAction(snapshot.state, action, makeId),
+        action.type === "save-planner-event" ||
+          action.type === "delete-planner-event" ||
+          action.type === "save-space" ||
+          action.type === "archive-space"
+          ? applyPlannerAction(snapshot.state, action, makeId, now())
+          : action.type === "add-chore" ||
+              action.type === "edit-chore" ||
+              action.type === "delete-chore" ||
+              action.type === "set-chore-status" ||
+              action.type === "rotate-chore"
+            ? applyChoreAction(snapshot.state, action, makeId, now())
+            : action.type === "add-expense" ||
+                action.type === "edit-expense" ||
+                action.type === "delete-expense" ||
+                action.type === "set-expense-status"
+              ? applyExpenseAction(snapshot.state, action, makeId, now())
+              : action.type === "add-agreement" ||
+                  action.type === "edit-agreement" ||
+                  action.type === "delete-agreement"
+                ? applyAgreementAction(snapshot.state, action, makeId)
+                : applyHouseholdAction(snapshot.state, action, makeId),
         notice,
       );
     } catch (error) {

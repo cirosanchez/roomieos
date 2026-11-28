@@ -1,5 +1,7 @@
 # RoomieOS — Design System & Interface Specification
 
+**Amended 24 November 2026 — approved demo entry flow:** `/` is a public landing page; `/login` is a clearly labeled client-only demo login. Successful login persists until explicit logout using a separate `roomieos:demo-login` localStorage flag. The dashboard moves to `/dashboard`; setup and workspace routes require this simulated login. Credentials are not displayed or prefilled. Logout preserves household data. This supersedes the earlier no-login entry flow only; no real accounts, authentication service or backend is introduced.
+
 **Version:** 1.1 · **Design direction:** Calm, editorial workspace inspired by Notion (not a clone)  
 **Theme:** Light-first · **Product personality:** Organized, approachable, quietly confident  
 **Implementation:** Next.js + TypeScript + Tailwind CSS; shadcn/ui with Base UI accessible primitives and Lucide icons; deployed on Vercel
@@ -275,3 +277,9 @@ Examples of exact content to use or adapt:
 - [ ] Roommate avatars work with initials/icons and optional local thumbnails.
 - [ ] Clear status colors plus text; proper focus/keyboard handling.
 - [ ] No dead buttons, decorative fake data, random placeholder text or broken mobile layout.
+
+## Approved v2 addition — Planner (25 November 2026)
+
+Add Planner to Workspace navigation. Use the existing shell and shadcn/Base UI components, plus a React DayPicker-backed Calendar and Popover date pickers. Desktop has a mini month navigator, type filters and Manage spaces beside a custom timed week grid; below desktop, options open in a Sheet. Phone defaults to Day; Week is available with contained horizontal scrolling. Provide Today, previous/next, Week/Day and New event controls, Monday-first weeks, all 24 hours and half-hour guides.
+
+Use blue guest cards, amber quiet cards and teal reservations with text labels/icons. Overnight guest bars occupy a strip above the hours, continuing across visible date boundaries; timed overlaps occupy adjacent columns. Include an expandable chronological event list for accessible reading. Create/edit dialogs use fixed actions, existing unsaved-change protection and explicit conflict confirmation. Space management retains archived labels on old events. Do not add the reference image's meeting integrations or additional utility panels.

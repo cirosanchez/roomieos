@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import { createSampleHousehold } from "../../src/domain/sample";
 
 test("navigation adapts, collapsed labels have tooltips, and perspective selection works by keyboard", async ({
@@ -8,7 +8,7 @@ test("navigation adapts, collapsed labels have tooltips, and perspective selecti
     if (localStorage.getItem("roomieos:v1") === null)
       localStorage.setItem("roomieos:v1", JSON.stringify(state));
   }, createSampleHousehold(new Date()));
-  await page.goto("/");
+  await page.goto("/dashboard/");
   const original = await page.evaluate(() =>
     localStorage.getItem("roomieos:v1"),
   );
@@ -105,12 +105,19 @@ test("navigation adapts, collapsed labels have tooltips, and perspective selecti
       page.getByRole("dialog", { name: "Navigation", exact: true }),
     ).not.toBeVisible();
   }
-  const perspective = page.getByRole("combobox", {
+  const perspective = page.getByRole("button", {
     name: "Switch demo perspective",
   });
   await perspective.focus();
   await page.keyboard.press("ArrowDown");
-  await expect(page.getByRole("listbox")).toBeVisible();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(
+    page.getByRole("menuitemradio", { name: /Avery/ }),
+  ).toHaveAttribute("aria-checked", "true");
+  await page.screenshot({
+    animations: "disabled",
+    path: testInfo.outputPath("perspective-menu.png"),
+  });
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await expect(perspective).toHaveAttribute("data-value", "sam");
@@ -131,6 +138,71 @@ test("navigation adapts, collapsed labels have tooltips, and perspective selecti
       () =>
         document.documentElement.scrollWidth >
         document.documentElement.clientWidth,
+    ),
+  ).toBe(false);
+});
+
+test("perspective menu contains long names and scrolls a full roster without changing shared records", async ({
+  page,
+}, testInfo) => {
+  const state = createSampleHousehold(new Date());
+  state.household.name = "A".repeat(60);
+  state.members[0].name = "A".repeat(40);
+  for (let index = 3; index < 20; index++)
+    state.members.push({
+      id: `roommate-${index}`,
+      name: `Roommate ${index} ${"B".repeat(28)}`,
+      active: true,
+      order: index,
+      avatar: { kind: "initials", value: "" },
+    });
+  state.members.push({
+    id: "archived",
+    name: "Archived roommate",
+    active: false,
+    order: 20,
+    avatar: { kind: "initials", value: "" },
+  });
+  await page.addInitScript((saved) => {
+    if (!localStorage.getItem("roomieos:v1"))
+      localStorage.setItem("roomieos:v1", JSON.stringify(saved));
+  }, state);
+  await page.goto("/chores/");
+  const trigger = page.getByRole("button", { name: "Switch demo perspective" });
+  await trigger.click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitemradio")).toHaveCount(20);
+  await expect(menu.getByText("Archived roommate")).toHaveCount(0);
+  const box = (await menu.boundingBox())!;
+  expect(box.x).toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  await expect(menu.getByText(/saved in this browser only/)).toBeInViewport();
+  await page.screenshot({
+    path: testInfo.outputPath("perspective-menu-full-roster.png"),
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  expect(await page.evaluate(() => localStorage.getItem("roomieos:v1"))).toBe(
+    JSON.stringify(state),
+  );
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("End");
+  await expect(menu.getByRole("menuitemradio").last()).toBeInViewport();
+  await page.keyboard.press("Enter");
+  await expect(menu).not.toBeVisible();
+  await expect(trigger).toHaveAttribute("data-value", "roommate-19");
+  await page.reload();
+  await expect(trigger).toHaveAttribute("data-value", "roommate-19");
+  const saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("roomieos:v1")!),
+  );
+  expect(saved).toEqual({ ...state, selectedMemberId: "roommate-19" });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
     ),
   ).toBe(false);
 });

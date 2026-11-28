@@ -1,5 +1,5 @@
 import { getDialog } from "./ui-controls";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { createSampleHousehold } from "../../src/domain/sample";
 
 test.beforeEach(async ({ page }) => {
@@ -35,7 +35,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Maple House",
   );
@@ -50,7 +50,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
     ["Expenses", "Expenses", "/expenses/"],
     ["Agreements", "House agreements", "/agreements/"],
     ["Settings", "Settings", "/settings/"],
-    ["Dashboard", "Maple House", "/"],
+    ["Dashboard", "Maple House", "/dashboard/"],
   ]) {
     await openNavigationIfNeeded(page);
     await page
@@ -82,7 +82,7 @@ test("all household routes navigate, reload and fit the viewport", async ({
 test("about dialog traps keyboard focus, closes with Escape and restores focus", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await openNavigationIfNeeded(page);
   await page
     .getByRole("button", { name: "About this prototype", exact: true })
@@ -112,7 +112,7 @@ test("about dialog traps keyboard focus, closes with Escape and restores focus",
 test("saved households bypass welcome without replacing their data", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Maple House",
   );
@@ -138,7 +138,7 @@ test("navigation drawer closes with Escape and returns focus", async ({
     test.info().project.name === "desktop",
     "Desktop uses the sidebar.",
   );
-  await page.goto("/");
+  await page.goto("/dashboard/");
   const trigger = page.getByRole("button", { name: "Open navigation" });
   await trigger.click();
   await expect(page.locator('[aria-label="Open navigation"]')).toHaveAttribute(

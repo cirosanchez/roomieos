@@ -1,6 +1,6 @@
 import { selectItems } from "./ui-controls";
 import { selectControl, getDialog, expectControlValue } from "./ui-controls";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { createSampleHousehold } from "../../src/domain/sample";
 import type { AppState } from "../../src/domain/types";
 
@@ -16,7 +16,7 @@ async function settings(page: Page) {
   ).toBeVisible();
 }
 async function sample(page: Page) {
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(page).toHaveURL(/\/welcome\/$/);
   await page.getByRole("radio", { name: /Explore a sample household/ }).check();
   await selectControl(page.getByLabel("Household currency"), "USD");
@@ -151,7 +151,7 @@ test("empty setup validates fields and creates an empty household with editable 
   const longName = "W".repeat(60);
   await page.getByLabel("Household name").fill(longName);
   await page.getByRole("button", { name: "Save household" }).click();
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(longName);
   expect(
     await page.evaluate(
@@ -402,7 +402,7 @@ test("blocked reads show retry without overwriting the saved household", async (
       return original.call(this, key);
     };
   }, createSampleHousehold(new Date()));
-  await page.goto("/");
+  await page.goto("/dashboard/");
   await expect(
     page.getByRole("heading", { name: "Browser storage is unavailable" }),
   ).toBeVisible();
